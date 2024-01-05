@@ -18,6 +18,9 @@ use APP\facades\Repo;
 use PKP\session\SessionManager;
 use APP\template\TemplateManager;
 use PKP\submission\PKPSubmission;
+use PKP\db\DAORegistry;
+use APP\core\Application;
+use PKP\controllers\grid\GridColumn;
 
 class CspWorkflowPlugin extends GenericPlugin {
 
@@ -34,6 +37,7 @@ class CspWorkflowPlugin extends GenericPlugin {
             Hook::add('TemplateManager::display', [$this, 'templateManagerDisplay']);
             Hook::add('TemplateResource::getFilename', [$this, '_overridePluginTemplates']);
             Hook::add('TemplateManager::fetch', [$this, 'templateManagerFetch']);
+            Hook::add('submissionfilesmetadataform::initdata', [$this, 'submissionfilesmetadataformInitdata']);
         }
 
         return $success;
@@ -199,7 +203,6 @@ class CspWorkflowPlugin extends GenericPlugin {
 
     public function templateManagerFetch($hookName, $args) {
         if($args[1] == "controllers/grid/grid.tpl"){
-            $x = $args[0]->tpl_vars["grid"]->value->_id; 
             if(in_array($args[0]->tpl_vars["grid"]->value->_id,
                         ["grid-files-submission-editorsubmissiondetailsfilesgrid", 
                         "grid-files-review-editorreviewfilesgrid",
@@ -216,6 +219,13 @@ class CspWorkflowPlugin extends GenericPlugin {
                 $args[0]->tpl_vars["columns"]->value["name"]->_flags["width"] = 60;
                 $args[0]->tpl_vars["columns"]->value["type"]->_flags["width"] = 25;
             }
+        }
+    }
+
+    public function submissionfilesmetadataformInitdata($hookName, $args) {
+        $submission = Repo::submission()->get((int) $args[0]->_submissionFile->getData('submissionId'));
+        if($submission->_data["stageId"] == 1){
+            $args[0]->_submissionFile->setData('name',str_replace('/','_',$submission->getData('submissionIdCSP')).'_PDF_para_avaliação',$args[0]->_submissionFile->getData('locale'));
         }
     }
 }
