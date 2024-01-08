@@ -203,8 +203,9 @@ class CspWorkflowPlugin extends GenericPlugin {
     }
 
     public function templateManagerFetch($hookName, $args) {
+        $templateVars = $args[0]->getTemplateVars();
         if($args[1] == "controllers/grid/gridRow.tpl"){
-            if(substr($args[0]->tpl_vars["grid"]->value->_id,0,10) == "grid-files"){
+            if(substr($templateVars["grid"]->_id,0,10) == "grid-files"){
                 $args[0]->tpl_vars["columns"]->value['notes'] = new GridColumn('notes', 'common.note');
                 $noteDao = DAORegistry::getDAO('NoteDAO'); /** @var NoteDAO $noteDao */
                 $notes = $noteDao->getByAssoc(Application::ASSOC_TYPE_SUBMISSION_FILE, $args[0]->tpl_vars["row"]->value->_id)->toArray();;
@@ -213,9 +214,16 @@ class CspWorkflowPlugin extends GenericPlugin {
                 }
                 $note = $content <> null ? implode('<hr>', $content) : "";
                 $args[0]->tpl_vars["cells"]->value[] = "<span id='cell-".
-                                                        $args[0]->tpl_vars["row"]->value->_id.
+                                                        $templateVars["row"]->_id.
                                                         "-note' class='gridCellContainer'>
                                                         <span class='label'>".$note.
+                                                        "</span></span>";
+
+                $args[0]->tpl_vars["columns"]->value['user'] = new GridColumn('notes', 'user.name');
+                $user = Repo::user()->get($templateVars["row"]->_data["submissionFile"]->_data["uploaderUserId"])->getGivenName($templateVars["currentLocale"]);
+                $args[0]->tpl_vars["cells"]->value[] = "<span id='cell-".$user.
+                                                        "-user' class='gridCellContainer'>
+                                                        <span class='label'>".$user.
                                                         "</span></span>";
             }
         }
@@ -227,7 +235,7 @@ class CspWorkflowPlugin extends GenericPlugin {
                         "grid-files-final-finaldraftfilesgrid", 
                         "grid-files-copyedit-copyeditfilesgrid",
                         "grid-files-productionready-productionreadyfilesgrid"])){
-                $args[0]->tpl_vars["columns"]->value["name"]->_flags["width"] = 60;
+                $args[0]->tpl_vars["columns"]->value["name"]->_flags["width"] = 40;
                 $args[0]->tpl_vars["columns"]->value["date"]->_flags["width"] = 20;
 
             }
