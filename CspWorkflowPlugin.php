@@ -228,7 +228,7 @@ class CspWorkflowPlugin extends GenericPlugin {
             }
         }
         if($args[1] == "controllers/grid/grid.tpl"){
-            if(in_array($args[0]->tpl_vars["grid"]->value->_id,
+            if(in_array($templateVars["grid"]->_id,
                         ["grid-files-submission-editorsubmissiondetailsfilesgrid", 
                         "grid-files-review-editorreviewfilesgrid",
                         "grid-files-review-workflowreviewrevisionsgrid",
@@ -239,7 +239,7 @@ class CspWorkflowPlugin extends GenericPlugin {
                 $args[0]->tpl_vars["columns"]->value["date"]->_flags["width"] = 20;
 
             }
-            if($args[0]->tpl_vars["grid"]->value->_id == "grid-files-final-managefinaldraftfilesgrid"){
+            if($templateVars["grid"]->_id == "grid-files-final-managefinaldraftfilesgrid"){
                 $args[0]->tpl_vars["columns"]->value["select"]->_flags["width"] = 13;
                 $args[0]->tpl_vars["columns"]->value["name"]->_flags["width"] = 60;
                 $args[0]->tpl_vars["columns"]->value["type"]->_flags["width"] = 25;
