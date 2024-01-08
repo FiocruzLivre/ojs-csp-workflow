@@ -203,6 +203,22 @@ class CspWorkflowPlugin extends GenericPlugin {
     }
 
     public function templateManagerFetch($hookName, $args) {
+        if($args[1] == "controllers/grid/gridRow.tpl"){
+            if(substr($args[0]->tpl_vars["grid"]->value->_id,0,10) == "grid-files"){
+                $args[0]->tpl_vars["columns"]->value['notes'] = new GridColumn('notes', 'common.note');
+                $noteDao = DAORegistry::getDAO('NoteDAO'); /** @var NoteDAO $noteDao */
+                $notes = $noteDao->getByAssoc(Application::ASSOC_TYPE_SUBMISSION_FILE, $args[0]->tpl_vars["row"]->value->_id)->toArray();;
+                foreach ($notes as $key => $value) {
+                    $content[] = $value->getContents('contents');
+                }
+                $note = $content <> null ? implode('<hr>', $content) : "";
+                $args[0]->tpl_vars["cells"]->value[] = "<span id='cell-".
+                                                        $args[0]->tpl_vars["row"]->value->_id.
+                                                        "-note' class='gridCellContainer'>
+                                                        <span class='label'>".$note.
+                                                        "</span></span>";
+            }
+        }
         if($args[1] == "controllers/grid/grid.tpl"){
             if(in_array($args[0]->tpl_vars["grid"]->value->_id,
                         ["grid-files-submission-editorsubmissiondetailsfilesgrid", 
