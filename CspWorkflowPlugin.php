@@ -38,6 +38,7 @@ class CspWorkflowPlugin extends GenericPlugin {
             Hook::add('TemplateResource::getFilename', [$this, '_overridePluginTemplates']);
             Hook::add('TemplateManager::fetch', [$this, 'templateManagerFetch']);
             Hook::add('submissionfilesmetadataform::initdata', [$this, 'submissionfilesmetadataformInitdata']);
+            Hook::add('submissionfilesmetadataform::execute', [$this, 'submissionfilesmetadataformExecute']);
         }
 
         return $success;
@@ -227,5 +228,19 @@ class CspWorkflowPlugin extends GenericPlugin {
         if($submission->_data["stageId"] == 1){
             $args[0]->_submissionFile->setData('name',str_replace('/','_',$submission->getData('submissionIdCSP')).'_PDF_para_avaliação',$args[0]->_submissionFile->getData('locale'));
         }
+    }
+
+    public function submissionfilesmetadataformExecute($hookName, $args) {
+        $request = Application::get()->getRequest();
+        $user = $request->getUser();
+
+        $noteDao = DAORegistry::getDAO('NoteDAO'); /** @var NoteDAO $noteDao */
+        $note = $noteDao->newDataObject();
+
+        $note->setUserId($user->getId());
+        $note->setContents($request->getUserVar('newNote'));
+        $note->setAssocType(Application::ASSOC_TYPE_SUBMISSION_FILE);
+        $note->setAssocId($request->getUserVar('submissionFileId'));
+        $noteDao->insertObject($note);
     }
 }
