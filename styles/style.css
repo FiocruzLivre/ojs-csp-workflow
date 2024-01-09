@@ -1,0 +1,4 @@
+/* Esconde barra lateral para melhorar usabilidade */
+.app__page--decision .panelSection__header{
+	display: none !important;
+} 

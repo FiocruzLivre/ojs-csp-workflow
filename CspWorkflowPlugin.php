@@ -34,6 +34,11 @@ class CspWorkflowPlugin extends GenericPlugin {
         $success = parent::register($category, $path, $mainContextId);
         if ($success && $this->getEnabled()) {
 
+            $request = Application::get()->getRequest();
+			$url = $request->getBaseUrl() . '/' . $this->getPluginPath() . '/styles/style.css';
+			$templateMgr = TemplateManager::getManager($request);
+			$templateMgr->addStyleSheet('CspSubmission', $url, ['contexts' => 'backend']);
+
             Hook::add('TemplateManager::display', [$this, 'templateManagerDisplay']);
             Hook::add('TemplateResource::getFilename', [$this, '_overridePluginTemplates']);
             Hook::add('TemplateManager::fetch', [$this, 'templateManagerFetch']);
