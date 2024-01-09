@@ -1,4 +1,9 @@
 /* Esconde barra lateral para melhorar usabilidade */
 .app__page--decision .panelSection__header{
 	display: none !important;
-} 
+}
+
+/* Esconde as opções de permitir recomendação e alteração de metadados ao designar participante */
+#addParticipant .recommendOnlyWrapper, #addParticipant .submissionEditMetadataPermit{
+	display: none !important;
+}
