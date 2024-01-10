@@ -208,6 +208,10 @@ class CspWorkflowPlugin extends GenericPlugin {
         return false;
     }
 
+    /**
+     * Em lista (grid) de arquivos,
+     * exibe comentário sobre o arquivo e nome de pessoa que incluiu o arquivo
+     */
     public function templateManagerFetch($hookName, $args) {
         $templateVars = $args[0]->getTemplateVars();
         if($args[1] == "controllers/grid/gridRow.tpl"){
@@ -226,11 +230,14 @@ class CspWorkflowPlugin extends GenericPlugin {
                                                         "</span></span>";
 
                 $args[0]->tpl_vars["columns"]->value['user'] = new GridColumn('notes', 'user.name');
-                $user = Repo::user()->get($templateVars["row"]->_data["submissionFile"]->_data["uploaderUserId"])->getGivenName($templateVars["currentLocale"]);
-                $args[0]->tpl_vars["cells"]->value[] = "<span id='cell-".$user.
-                                                        "-user' class='gridCellContainer'>
-                                                        <span class='label'>".$user.
-                                                        "</span></span>";
+                if(isset($templateVars["row"]->_data["submissionFile"])){
+                    $user = Repo::user()->get($templateVars["row"]->_data["submissionFile"]->_data["uploaderUserId"])->getGivenName($templateVars["currentLocale"]);
+                    $args[0]->tpl_vars["cells"]->value[] = "<span id='cell-".$user.
+                                                            "-user' class='gridCellContainer'>
+                                                            <span class='label'>".$user.
+                                                            "</span></span>";
+                }
+
             }
         }
         if($args[1] == "controllers/grid/grid.tpl"){
