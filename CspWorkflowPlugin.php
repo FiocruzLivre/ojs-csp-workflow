@@ -44,6 +44,7 @@ class CspWorkflowPlugin extends GenericPlugin {
             Hook::add('TemplateManager::fetch', [$this, 'templateManagerFetch']);
             Hook::add('submissionfilesmetadataform::initdata', [$this, 'submissionfilesmetadataformInitdata']);
             Hook::add('submissionfilesmetadataform::execute', [$this, 'submissionfilesmetadataformExecute']);
+            Hook::add('Form::config::after', [$this, 'FormConfigAfter']);
         }
 
         return $success;
@@ -271,5 +272,19 @@ class CspWorkflowPlugin extends GenericPlugin {
         $note->setAssocType(Application::ASSOC_TYPE_SUBMISSION_FILE);
         $note->setAssocId($request->getUserVar('submissionFileId'));
         $noteDao->insertObject($note);
+    }
+
+
+    /**
+     * Em formulário de "Exigir Nova Rodada de Avaliação",
+     * passa segundo campo selecionado ("Solicitar modificações ao autor que estarão sujeitos a avaliação futura.")
+     */
+    public function FormConfigAfter($hookName, $args) {
+        if($args[0]["id"] == "selectRevisionDecision"){
+            $revisionDecisionForm = $args[1];
+            $config =& $args[0];
+            $fieldDecision = $revisionDecisionForm->getField('decision');
+            $config["fields"][0]["value"] = $fieldDecision->options[1]["value"];
+        }
     }
 }
