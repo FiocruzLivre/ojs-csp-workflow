@@ -45,6 +45,7 @@ class CspWorkflowPlugin extends GenericPlugin {
             Hook::add('submissionfilesmetadataform::initdata', [$this, 'submissionfilesmetadataformInitdata']);
             Hook::add('submissionfilesmetadataform::execute', [$this, 'submissionfilesmetadataformExecute']);
             Hook::add('Form::config::after', [$this, 'FormConfigAfter']);
+            Hook::add('stageparticipantgridhandler::initfeatures', [$this, 'stageparticipantgridhandlerInitfeatures']);
         }
 
         return $success;
@@ -292,6 +293,17 @@ class CspWorkflowPlugin extends GenericPlugin {
             $config =& $args[0];
             $fieldDecision = $revisionDecisionForm->getField('decision');
             $config["fields"][0]["value"] = $fieldDecision->options[1]["value"];
+        }
+    }
+
+    /**
+     * Quando novo participante é adicionado na etapa de avaliação,
+     * recebe restrição de fazer recomendação apenas, não podendo tomar uma decisão editorial
+     */
+    public function stageparticipantgridhandlerInitfeatures($hookName, $args) {
+        if($args[2]["stageId"] == 3){
+            $args[2]["recommendOnly"] = "on";
+            $args[1]->_requestVars["recommendOnly"] = "on";
         }
     }
 }
