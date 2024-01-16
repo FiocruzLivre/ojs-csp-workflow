@@ -46,6 +46,7 @@ class CspWorkflowPlugin extends GenericPlugin {
             Hook::add('submissionfilesmetadataform::execute', [$this, 'submissionfilesmetadataformExecute']);
             Hook::add('Form::config::after', [$this, 'FormConfigAfter']);
             Hook::add('stageparticipantgridhandler::initfeatures', [$this, 'stageparticipantgridhandlerInitfeatures']);
+            Hook::add('submissionfilesuploadform::display', [$this, 'submissionfilesuploadformDisplay']);
         }
 
         return $success;
@@ -304,6 +305,17 @@ class CspWorkflowPlugin extends GenericPlugin {
         if($args[2]["stageId"] == 3){
             $args[2]["recommendOnly"] = "on";
             $args[1]->_requestVars["recommendOnly"] = "on";
+        }
+    }
+
+    /**
+     * Adiciona texto para auxiliar entendimento de usuário
+     */
+    public function submissionfilesuploadformDisplay($hookName, $args) {
+        foreach ($args[0]->getData('submissionFileOptions') as $key => $value) {
+            if($key){
+                $args[0]->_data["submissionFileOptions"][$key] = 'Nova versão para ' . $value;
+            }
         }
     }
 }
