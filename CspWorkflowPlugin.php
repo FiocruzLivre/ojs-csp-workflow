@@ -42,7 +42,7 @@ class CspWorkflowPlugin extends GenericPlugin {
             Hook::add('TemplateManager::display', [$this, 'templateManagerDisplay']);
             Hook::add('TemplateResource::getFilename', [$this, '_overridePluginTemplates']);
             Hook::add('TemplateManager::fetch', [$this, 'templateManagerFetch']);
-            Hook::add('submissionfilesmetadataform::initdata', [$this, 'submissionfilesmetadataformInitdata']);
+            Hook::add('submissionfilesuploadform::execute', [$this, 'submissionfilesuploadformExecute']);
             Hook::add('submissionfilesmetadataform::execute', [$this, 'submissionfilesmetadataformExecute']);
             Hook::add('Form::config::after', [$this, 'FormConfigAfter']);
             Hook::add('stageparticipantgridhandler::initfeatures', [$this, 'stageparticipantgridhandlerInitfeatures']);
@@ -262,10 +262,14 @@ class CspWorkflowPlugin extends GenericPlugin {
         }
     }
 
-    public function submissionfilesmetadataformInitdata($hookName, $args) {
-        $submission = Repo::submission()->get((int) $args[0]->_submissionFile->getData('submissionId'));
-        if($submission->_data["stageId"] == 1){
-            $args[0]->_submissionFile->setData('name',str_replace('/','_',$submission->getData('submissionIdCSP')).'_PDF_para_avaliação',$args[0]->_submissionFile->getData('locale'));
+    public function submissionfilesuploadformExecute($hookName, $args) {
+        if($args[0]->getData('revisedFileId') == ""){
+            $request = \Application::get()->getRequest();
+            $context = $request->getContext();
+            $file =& $args[1];
+            $submission = Repo::submission()->get((int) $args[1]->getData('submissionId'));
+            $file->setData('name', 'csp_' . str_replace('/', '_', $submission->getData('submissionIdCSP')) .'_V1', $file->getData('locale'));
+            Repo::submissionFile()->edit($file, $file->_data);
         }
     }
 
