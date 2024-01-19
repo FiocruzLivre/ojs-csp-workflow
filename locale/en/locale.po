@@ -13,4 +13,4 @@ msgid "plugins.generic.cspWorkflow.displayName"
 msgstr "Fluxo CSP"
 
 msgid "plugins.generic.cspWorkflow.description"
-msgstr "Customizes OJS flow according to CSP."
+msgstr "Customizes the OJS flow according to the Cadernos de Saúde Pública of Fiocruz."

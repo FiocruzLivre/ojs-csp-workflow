@@ -13,4 +13,4 @@ msgid "plugins.generic.cspUser.displayName"
 msgstr "CSP Users"
 
 msgid "plugins.generic.cspUser.description"
-msgstr "Agregar campos personalizados por CSP al usuario."
+msgstr "Personaliza el flujo del OJS según los Cuadernos de Salud Pública de Fiocruz"
