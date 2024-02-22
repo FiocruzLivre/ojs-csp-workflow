@@ -210,14 +210,15 @@ class CspWorkflowPlugin extends GenericPlugin {
         return false;
     }
 
-    /**
-     * Em lista (grid) de arquivos,
-     * exibe comentário sobre o arquivo e nome de pessoa que incluiu o arquivo
-     */
+
     public function templateManagerFetch($hookName, $args) {
         $templateVars = $args[0]->getTemplateVars();
         if($args[1] == "controllers/grid/gridRow.tpl"){
             if(substr($templateVars["grid"]->_id,0,10) == "grid-files"){
+                /**
+                 * Em lista (grid) de arquivos,
+                 * exibe comentário sobre o arquivo e nome de pessoa que incluiu o arquivo
+                 */
                 $args[0]->tpl_vars["columns"]->value['notes'] = new GridColumn('notes', 'common.note');
                 $noteDao = DAORegistry::getDAO('NoteDAO'); /** @var NoteDAO $noteDao */
                 $notes = $noteDao->getByAssoc(Application::ASSOC_TYPE_SUBMISSION_FILE, $args[0]->tpl_vars["row"]->value->_id)->toArray();;
@@ -242,6 +243,7 @@ class CspWorkflowPlugin extends GenericPlugin {
 
             }
         }
+        // Altera a largura das colunas da lista (grid) de arquivos
         if($args[1] == "controllers/grid/grid.tpl"){
             if(in_array($templateVars["grid"]->_id,
                         ["grid-files-submission-editorsubmissiondetailsfilesgrid", 
@@ -252,7 +254,6 @@ class CspWorkflowPlugin extends GenericPlugin {
                         "grid-files-productionready-productionreadyfilesgrid"])){
                 $args[0]->tpl_vars["columns"]->value["name"]->_flags["width"] = 40;
                 $args[0]->tpl_vars["columns"]->value["date"]->_flags["width"] = 20;
-
             }
             if($templateVars["grid"]->_id == "grid-files-final-managefinaldraftfilesgrid"){
                 $args[0]->tpl_vars["columns"]->value["select"]->_flags["width"] = 13;
