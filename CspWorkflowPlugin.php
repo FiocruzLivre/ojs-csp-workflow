@@ -215,6 +215,9 @@ class CspWorkflowPlugin extends GenericPlugin {
         $templateVars = $args[0]->getTemplateVars();
         if($args[1] == "controllers/grid/gridRow.tpl"){
             if(substr($templateVars["grid"]->_id,0,10) == "grid-files"){
+                // Remove coluna que exibe tipo do arquivo
+                unset($args[0]->tpl_vars["columns"]->value["type"]);
+                unset($args[0]->tpl_vars["cells"]->value[2]);
                 /**
                  * Em lista (grid) de arquivos,
                  * exibe comentário sobre o arquivo e nome de pessoa que incluiu o arquivo
@@ -252,7 +255,7 @@ class CspWorkflowPlugin extends GenericPlugin {
                         "grid-files-final-finaldraftfilesgrid", 
                         "grid-files-copyedit-copyeditfilesgrid",
                         "grid-files-productionready-productionreadyfilesgrid"])){
-                $args[0]->tpl_vars["columns"]->value["name"]->_flags["width"] = 40;
+                $args[0]->tpl_vars["columns"]->value["name"]->_flags["width"] = 60;
                 $args[0]->tpl_vars["columns"]->value["date"]->_flags["width"] = 20;
             }
             if($templateVars["grid"]->_id == "grid-files-final-managefinaldraftfilesgrid"){
