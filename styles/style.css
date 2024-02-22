@@ -1,9 +1,9 @@
-/* Esconde barra lateral para melhorar usabilidade */
-.app__page--decision .panelSection__header{
+/* Esconde as opções de permitir recomendação e alteração de metadados ao designar participante */
+#addParticipant .recommendOnlyWrapper, #addParticipant .submissionEditMetadataPermit{
 	display: none !important;
 }
 
-/* Esconde as opções de permitir recomendação e alteração de metadados ao designar participante */
-#addParticipant .recommendOnlyWrapper, #addParticipant .submissionEditMetadataPermit{
+/* Remove títulos de listas de submissões */
+.submissionsListPanel .pkpHeader__title{
 	display: none !important;
 }
