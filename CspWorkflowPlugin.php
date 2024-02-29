@@ -271,9 +271,10 @@ class CspWorkflowPlugin extends GenericPlugin {
             $request = \Application::get()->getRequest();
             $context = $request->getContext();
             $file =& $args[1];
+            $fileArray = explode('.', $file->getData('path'));
             $submission = Repo::submission()->get((int) $args[1]->getData('submissionId'));
-            $file->setData('name', 'csp_' . str_replace('/', '_', $submission->getData('submissionIdCSP')) .'_V1', $file->getData('locale'));
-            $file->setData('name', 'csp_' . str_replace('/', '_', $submission->getData('submissionIdCSP')) .'_V1', $context->getData('primaryLocale'));
+            $file->setData('name', 'csp_' . str_replace('/', '_', $submission->getData('submissionIdCSP')) .'_V1.' . $fileArray[1], $file->getData('locale'));
+            $file->setData('name', 'csp_' . str_replace('/', '_', $submission->getData('submissionIdCSP')) .'_V1.' . $fileArray[1], $context->getData('primaryLocale'));
             Repo::submissionFile()->edit($file, $file->_data);
         }
     }
