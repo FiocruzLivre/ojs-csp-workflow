@@ -267,7 +267,7 @@ class CspWorkflowPlugin extends GenericPlugin {
     }
 
     public function submissionfilesuploadformExecute($hookName, $args) {
-        if($args[0]->getData('revisedFileId') == ""){
+        if($args[0]->getData('revisedFileId') == "" && $args[0]->getData('fileStage') == 2){
             $request = \Application::get()->getRequest();
             $context = $request->getContext();
             $file =& $args[1];
