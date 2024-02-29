@@ -7,3 +7,11 @@
 .submissionsListPanel .pkpHeader__title{
 	display: none !important;
 }
+
+.decision__skipStep.-linkButton{
+	background: #d00a6c !important;
+	padding: 10px;
+	color: #fff;
+	text-decoration: none;
+	font-weight: bold;
+}
