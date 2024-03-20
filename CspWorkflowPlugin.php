@@ -246,7 +246,7 @@ class CspWorkflowPlugin extends GenericPlugin {
 
             }
         }
-        // Altera a largura das colunas da lista (grid) de arquivos
+        // Altera a largura das colunas (grid) em diferentes estágios
         if($args[1] == "controllers/grid/grid.tpl"){
             if(in_array($templateVars["grid"]->_id,
                         ["grid-files-submission-editorsubmissiondetailsfilesgrid", 
@@ -263,18 +263,31 @@ class CspWorkflowPlugin extends GenericPlugin {
                 $args[0]->tpl_vars["columns"]->value["name"]->_flags["width"] = 60;
                 $args[0]->tpl_vars["columns"]->value["type"]->_flags["width"] = 25;
             }
+            if($templateVars["grid"]->_id == "grid-users-reviewer-reviewergrid"){
+                $args[0]->tpl_vars["columns"]->value["name"]->_flags["width"] = 20;
+                $args[0]->tpl_vars["columns"]->value["considered"]->_flags["width"] = 20;
+                $args[0]->tpl_vars["columns"]->value["method"]->_flags["width"] = 20;
+                $args[0]->tpl_vars["columns"]->value["actions"]->_flags["width"] = 40;
+            }
         }
     }
 
     public function submissionfilesuploadformExecute($hookName, $args) {
+        $request = \Application::get()->getRequest();
+        $context = $request->getContext();
+        $file =& $args[1];
+        $fileArray = explode('.', $file->getData('path'));
+        $submission = Repo::submission()->get((int) $args[1]->getData('submissionId'));
+        // Renomeia arquivos de primeira versão enviados por autor
         if($args[0]->getData('revisedFileId') == "" && $args[0]->getData('fileStage') == 2){
-            $request = \Application::get()->getRequest();
-            $context = $request->getContext();
-            $file =& $args[1];
-            $fileArray = explode('.', $file->getData('path'));
-            $submission = Repo::submission()->get((int) $args[1]->getData('submissionId'));
             $file->setData('name', 'csp_' . str_replace('/', '_', $submission->getData('submissionIdCSP')) .'_V1.' . $fileArray[1], $file->getData('locale'));
             $file->setData('name', 'csp_' . str_replace('/', '_', $submission->getData('submissionIdCSP')) .'_V1.' . $fileArray[1], $context->getData('primaryLocale'));
+            Repo::submissionFile()->edit($file, $file->_data);
+        }
+        // Renomeia arquivos de segunda versão enviados por autor
+        if($args[0]->getData('revisedFileId') == "" && $args[0]->_reviewRound->_data["stageId"] == 3 && $args[0]->_reviewRound->_data["status"] = 15){
+            $file->setData('name', 'csp_' . str_replace('/', '_', $submission->getData('submissionIdCSP')) .'_V' . ($args[0]->_reviewRound->_data["round"]+1) . "." . $fileArray[1], $file->getData('locale'));
+            $file->setData('name', 'csp_' . str_replace('/', '_', $submission->getData('submissionIdCSP')) .'_V' . ($args[0]->_reviewRound->_data["round"]+1) . "." . $fileArray[1], $context->getData('primaryLocale'));
             Repo::submissionFile()->edit($file, $file->_data);
         }
     }
