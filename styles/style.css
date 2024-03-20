@@ -15,3 +15,13 @@
 	text-decoration: none;
 	font-weight: bold;
 }
+
+/* Customiza links de ler, agradecer e reverter avaliação */
+.pkp_linkaction_icon_unconsider, .pkp_linkaction_icon_accepted, .pkp_linkaction_readReview{
+	text-decoration: underline !important;
+	line-height: unset !important;
+}
+
+[id^="reviewersGrid"] tbody td:not(.first_column){
+	text-align: right !important;
+}
