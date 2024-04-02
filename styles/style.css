@@ -18,10 +18,20 @@
 
 /* Customiza links de ler, agradecer e reverter avaliação */
 .pkp_linkaction_icon_unconsider, .pkp_linkaction_icon_accepted, .pkp_linkaction_readReview{
-	text-decoration: underline !important;
 	line-height: unset !important;
 }
 
 [id^="reviewersGrid"] tbody td:not(.first_column){
 	text-align: right !important;
+}
+
+/* Remove negrito de links para suavizar a leitura */
+.pkp_controllers_grid table td a, .pkp_controllers_grid .actions a{
+	font-weight: normal !important;
+}
+
+/* Remove cor de fundo de caixas de arquivos para suavizar leitura */
+.pkp_controllers_grid div.header{
+	background-color: unset !important;
+	color: rgba(0,0,0,0.84) !important;
 }
