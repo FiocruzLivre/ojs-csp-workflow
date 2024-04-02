@@ -47,6 +47,7 @@ class CspWorkflowPlugin extends GenericPlugin {
             Hook::add('Form::config::after', [$this, 'FormConfigAfter']);
             Hook::add('stageparticipantgridhandler::initfeatures', [$this, 'stageparticipantgridhandlerInitfeatures']);
             Hook::add('submissionfilesuploadform::display', [$this, 'submissionfilesuploadformDisplay']);
+            Hook::add('ReviewerAction::confirmReview', [$this, 'reviewerActionConfirmReview']);
         }
 
         return $success;
@@ -341,4 +342,10 @@ class CspWorkflowPlugin extends GenericPlugin {
             }
         }
     }
+
+    // Remove envio de email ao avaliador aceitar realizar avaliação
+    public function reviewerActionConfirmReview($hookName, $args) {
+        unset($args[2]->to);
+    }
+
 }
