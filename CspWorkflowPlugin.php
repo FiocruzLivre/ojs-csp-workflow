@@ -214,6 +214,14 @@ class CspWorkflowPlugin extends GenericPlugin {
 
     public function templateManagerFetch($hookName, $args) {
         $templateVars = $args[0]->getTemplateVars();
+        // Restringe Recomendação de avaliador a Aceitar, Rejeitar e Correções obrigatórias
+        if($args[1] == "reviewer/review/step3.tpl"){
+            foreach ($templateVars["reviewerRecommendationOptions"] as $key => $value) {
+                if(!in_array($value,["common.chooseOne", "reviewer.article.decision.accept", "reviewer.article.decision.pendingRevisions", "reviewer.article.decision.decline" ])){
+                    unset($args[0]->tpl_vars["reviewerRecommendationOptions"]->value[$key]);
+                }
+            }
+        }
         if($args[1] == "controllers/grid/gridRow.tpl"){
             if(substr($templateVars["grid"]->_id,0,10) == "grid-files"){
                 // Remove coluna que exibe tipo do arquivo
