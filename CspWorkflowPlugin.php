@@ -225,8 +225,10 @@ class CspWorkflowPlugin extends GenericPlugin {
         if($args[1] == "controllers/grid/gridRow.tpl"){
             if(substr($templateVars["grid"]->_id,0,10) == "grid-files"){
                 // Remove coluna que exibe tipo do arquivo
-                unset($args[0]->tpl_vars["columns"]->value["type"]);
-                unset($args[0]->tpl_vars["cells"]->value[2]);
+                $typePosition = array_search("type", array_keys($args[0]->tpl_vars["columns"]->value));
+                unset($args[0]->tpl_vars["columns"]->value[$typePosition]);
+                unset($args[0]->tpl_vars["cells"]->value[$typePosition]);
+
                 /**
                  * Em lista (grid) de arquivos,
                  * exibe comentário sobre o arquivo e nome de pessoa que incluiu o arquivo
