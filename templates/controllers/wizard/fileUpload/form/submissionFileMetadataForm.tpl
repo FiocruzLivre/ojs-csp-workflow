@@ -28,9 +28,9 @@
 	{fbvFormArea id="fileMetaData"}
 
 		{* File name and detail summary *}
-		{fbvFormSection for="name" size=$fbvStyles.size.LARGE title="submission.form.name" required=true}
+		<div style="display:none">
 			{fbvElement type="text" id="name" value=$submissionFile->getData('name') multilingual=true maxlength="255" required=true}
-		{/fbvFormSection}
+		</div>
 
 		{* Supplementary file metadata *}
 		{if $genre && $genre->getCategory() == $smarty.const.GENRE_CATEGORY_SUPPLEMENTARY}
