@@ -224,14 +224,9 @@ class CspWorkflowPlugin extends GenericPlugin {
         }
         if($args[1] == "controllers/grid/gridRow.tpl"){
             if(substr($templateVars["grid"]->_id,0,10) == "grid-files"){
-                // Remove coluna que exibe tipo do arquivo
-                $typePosition = array_search("type", array_keys($args[0]->tpl_vars["columns"]->value));
-                unset($args[0]->tpl_vars["columns"]->value[$typePosition]);
-                unset($args[0]->tpl_vars["cells"]->value[$typePosition]);
-
                 /**
                  * Em lista (grid) de arquivos,
-                 * exibe comentário sobre o arquivo e nome de pessoa que incluiu o arquivo
+                 * substitui tipo do arquivo por comentário sobre o arquivo e adiciona nome de pessoa que incluiu o arquivo
                  */
                 $args[0]->tpl_vars["columns"]->value['notes'] = new GridColumn('notes', 'common.note');
                 $noteDao = DAORegistry::getDAO('NoteDAO'); /** @var NoteDAO $noteDao */
@@ -240,7 +235,8 @@ class CspWorkflowPlugin extends GenericPlugin {
                     $content[] = $value->getContents('contents');
                 }
                 $note = $content <> null ? implode('<hr>', $content) : "";
-                $args[0]->tpl_vars["cells"]->value[] = "<span id='cell-".
+                $typePosition = array_search("type", array_keys($args[0]->tpl_vars["columns"]->value));
+                $args[0]->tpl_vars["cells"]->value[$typePosition] = "<span id='cell-".
                                                         $templateVars["row"]->_id.
                                                         "-note' class='gridCellContainer'>
                                                         <span class='label'>".$note.
