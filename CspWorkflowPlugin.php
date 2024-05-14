@@ -220,6 +220,39 @@ class CspWorkflowPlugin extends GenericPlugin {
 
     public function templateManagerFetch($hookName, $args) {
         $templateVars = $args[0]->getTemplateVars();
+        $request = Application::get()->getRequest();
+        $userRoles = $request->getUser()->getRoles($request->getContext()->getId());
+        foreach ($userRoles as $roles => $role) {
+            $userRolesArray[] = $role->getData('id');
+        }
+        /* Em caixa de Adicionar comentário, exibe somente a secretaria como opção de participantes da conversa
+        para perfis que não são Gerente, Admin, Editor Chefe ou Assistente de Edição*/
+        if($args[1] == "controllers/grid/queries/form/queryForm.tpl"  && array_intersect(
+            $userRolesArray,
+            [
+                Role::ROLE_ID_MANAGER,
+                Role::ROLE_ID_SITE_ADMIN,
+                Role::ROLE_ID_ASSISTANT,
+                Role::ROLE_ID_SUB_EDITOR
+            ]
+            ) == null){
+            foreach ($templateVars["allParticipants"] as $participant => $value) {
+                $userGroups = Repo::userGroup()
+                ->getCollector()
+                ->filterByUserIds([$participant])
+                ->getMany()
+                ->toArray();
+                $userGroupsAbbrev = array();
+                foreach($userGroups as $userGroup){
+                    $userGroupsAbbrev[] = $userGroup->getLocalizedData('abbrev');
+                }
+                if(!in_array('SECRETARIA',$userGroupsAbbrev) && ($participant != $args[0]->tpl_vars["assignedParticipants"]->value[0])){
+                    unset($args[0]->tpl_vars["allParticipants"]->value[$participant]);
+                }else{
+                    $args[0]->tpl_vars["assignedParticipants"]->value[] = $participant;
+                }
+            }
+        }
         // Restringe Recomendação de avaliador a Aceitar, Rejeitar e Correções obrigatórias
         if($args[1] == "reviewer/review/step3.tpl"){
             foreach ($templateVars["reviewerRecommendationOptions"] as $key => $value) {
