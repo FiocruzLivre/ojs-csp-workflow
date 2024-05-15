@@ -220,6 +220,16 @@ class CspWorkflowPlugin extends GenericPlugin {
 
     public function templateManagerFetch($hookName, $args) {
         $templateVars = $args[0]->getTemplateVars();
+        // Limita a 5 os itens da lista de avaliadores em caixa de Adicionar avaliador
+        if($args[1] == "controllers/grid/users/reviewer/form/advancedSearchReviewerForm.tpl"){
+            $args[0]
+            ->tpl_vars["selectReviewerListData"]
+            ->value["components"]["selectReviewer"]["items"] = array_slice(
+                $args[0]->tpl_vars["selectReviewerListData"]->value["components"]["selectReviewer"]["items"],
+                0,
+                5
+            );
+        }
         $request = Application::get()->getRequest();
         $userRoles = $request->getUser()->getRoles($request->getContext()->getId());
         foreach ($userRoles as $roles => $role) {
