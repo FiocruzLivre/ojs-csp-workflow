@@ -414,7 +414,7 @@ class CspWorkflowPlugin extends GenericPlugin {
         $stageAssignmentDao = DAORegistry::getDAO('StageAssignmentDAO'); /** @var StageAssignmentDAO $stageAssignmentDao */
         $authorAssignments = $stageAssignmentDao->getBySubmissionAndRoleIds($args[0]->getData('submissionId'), [Role::ROLE_ID_AUTHOR]);
         while ($assignment = $authorAssignments->next()) {
-            if ($assignment->getStageId() == $reviewRound->getStageId()) {
+            if($_SESSION["userId"] == $assignment->getUserId()){
                 $authorUserIds[] = (int) $assignment->getUserId();
             }
         }
