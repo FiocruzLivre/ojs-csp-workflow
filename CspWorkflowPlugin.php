@@ -26,6 +26,8 @@ use PKP\log\SubmissionEmailLogEntry;
 use APP\core\Services;
 use PKP\mail\mailables\RevisedVersionNotify;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Facades\DB;
 
 class CspWorkflowPlugin extends GenericPlugin {
 
@@ -54,6 +56,7 @@ class CspWorkflowPlugin extends GenericPlugin {
             Hook::add('submissionfilesuploadform::display', [$this, 'submissionfilesuploadformDisplay']);
             Hook::add('ReviewerAction::confirmReview', [$this, 'reviewerActionConfirmReview']);
             Hook::add('SubmissionFile::add', [$this, 'submissionFileAdd']);
+            Hook::add('Submission::Collector', [$this, 'submissionCollector']);
         }
 
         return $success;
@@ -79,6 +82,34 @@ class CspWorkflowPlugin extends GenericPlugin {
     public function getDescription()
     {
         return __('plugins.generic.cspWorkflow.description');
+    }
+
+    public function submissionCollector($hookName, $args){
+        // Inclui campo submissionIdCSP em retorno de busca
+        $request = Application::get()->getRequest();
+        if ($request->_requestVars["searchPhrase"] <> "") {
+            $keywords = collect(Application::getSubmissionSearchIndex()
+                ->filterKeywords($request->_requestVars["searchPhrase"], true, true, true))
+                ->unique();
+            foreach ($keywords as $key => $value) {
+                $args[0]->bindings["where"][] = 'submissionIdCSP';
+                $args[0]->bindings["where"][] = $request->_requestVars["searchPhrase"];
+            }
+            $likePattern = DB::raw("CONCAT('%', LOWER(?), '%')");
+            $lastKey = array_key_last($args[0]->wheres);
+            $args[0]->wheres[$lastKey]["query"]->orWhere(fn (Builder $q) => $keywords
+                ->map(
+                    fn (string $keyword) => $q
+                        ->orWhereIn(
+                            's.submission_id',
+                            fn (Builder $query) => $query
+                                ->select('ss.submission_id')
+                                ->from('submission_settings AS ss')
+                                ->where('ss.setting_name', '=', 'submissionIdCSP')
+                                ->where(DB::raw('LOWER(ss.setting_value)'), 'LIKE', $likePattern)->addBinding($keyword)
+                        )
+                ));
+        }
     }
 
     public function templateManagerDisplay($hookName, $args) {
