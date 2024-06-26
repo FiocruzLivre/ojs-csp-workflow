@@ -55,7 +55,6 @@ class CspWorkflowPlugin extends GenericPlugin {
             Hook::add('stageparticipantgridhandler::initfeatures', [$this, 'stageparticipantgridhandlerInitfeatures']);
             Hook::add('submissionfilesuploadform::display', [$this, 'submissionfilesuploadformDisplay']);
             Hook::add('ReviewerAction::confirmReview', [$this, 'reviewerActionConfirmReview']);
-            // Hook::add('SubmissionFile::add', [$this, 'submissionFileAdd']);
             Hook::add('Submission::Collector', [$this, 'submissionCollector']);
         }
 
@@ -435,91 +434,5 @@ class CspWorkflowPlugin extends GenericPlugin {
     public function reviewerActionConfirmReview($hookName, $args) {
         unset($args[2]->to);
     }
-
-    // Envia email para secretaria quando autor faz upload de nova versão
-    // e remove uploaderUserId para que não seja enviado email para editores
-    // public function submissionFileAdd($hookName, $args) {
-    //     $authorUserIds = [];
-    //     $reviewRoundDao = DAORegistry::getDAO('ReviewRoundDAO'); /** @var ReviewRoundDAO $reviewRoundDao */
-    //     $reviewRound = $reviewRoundDao->getById($args[0]->getData('assocId'));
-    //     $stageAssignmentDao = DAORegistry::getDAO('StageAssignmentDAO'); /** @var StageAssignmentDAO $stageAssignmentDao */
-    //     $authorAssignments = $stageAssignmentDao->getBySubmissionAndRoleIds($args[0]->getData('submissionId'), [Role::ROLE_ID_AUTHOR]);
-    //     while ($assignment = $authorAssignments->next()) {
-    //         if($_SESSION["userId"] == $assignment->getUserId()){
-    //             $authorUserIds[] = (int) $assignment->getUserId();
-    //         }
-    //     }
-
-    //     if (in_array($args[0]->getData('uploaderUserId'), $authorUserIds)) {
-    //         $submission = Repo::submission()->get($args[0]->getData('submissionId'));
-    //         $context = Services::get('context')->get($submission->getData('contextId'));
-    //         $uploader = Repo::user()->get($args[0]->getData('uploaderUserId'));
-    //         $user = Application::get()->getRequest()->getUser();
-
-    //         // Fetch the latest notification email timestamp
-    //         $submissionEmailLogDao = DAORegistry::getDAO('SubmissionEmailLogDAO');
-    //         /** @var SubmissionEmailLogDAO $submissionEmailLogDao */
-    //         $submissionEmails = $submissionEmailLogDao->getByEventType(
-    //             $submission->getId(),
-    //             SubmissionEmailLogEntry::SUBMISSION_EMAIL_AUTHOR_NOTIFY_REVISED_VERSION
-    //         );
-    //         $lastNotification = null;
-    //         $sentDates = [];
-    //         if ($submissionEmails) {
-    //             while ($email = $submissionEmails->next()) {
-    //                 if ($email->getDateSent()) {
-    //                     $sentDates[] = $email->getDateSent();
-    //                 }
-    //             }
-    //             if (!empty($sentDates)) {
-    //                 $lastNotification = max(array_map('strtotime', $sentDates));
-    //             }
-    //         }
-
-    //         // Get editors assigned to the submission, consider also the recommendOnly editors
-    //         $reviewRoundDao = DAORegistry::getDAO('ReviewRoundDAO'); /** @var ReviewRoundDAO $reviewRoundDao */
-    //         $stageAssignmentDao = DAORegistry::getDAO('StageAssignmentDAO'); /** @var StageAssignmentDAO $stageAssignmentDao*/
-    //         $reviewRound = $reviewRoundDao->getById($args[0]->getData('assocId'));
-    //         $editorsStageAssignments = $stageAssignmentDao->getEditorsAssignedToStage(
-    //             $submission->getId(),
-    //             $reviewRound->getStageId()
-    //         );
-
-    //         $recipients = [];
-    //         foreach ($editorsStageAssignments as $editorsStageAssignment) {
-    //             $userGroup = Repo::userGroup()->get($editorsStageAssignment->getData('userGroupId'));
-    //             $userGroupAbbrev = $userGroup->getLocalizedData('abbrev');
-    //             $editor = Repo::user()->get($editorsStageAssignment->getUserId());
-    //             // IF no prior notification exists
-    //             // OR if editor has logged in after the last revision upload
-    //             // OR the last upload and notification was sent more than a day ago,
-    //             // THEN send a new notification
-    //             if ($userGroupAbbrev == 'SECRETARIA' && (is_null($lastNotification) || strtotime($editor->getDateLastLogin()) > $lastNotification || strtotime('-1 day') > $lastNotification)) {
-    //                 $recipients[] = $editor;
-    //             }
-    //         }
-
-    //         if (!empty($recipients)) {
-    //             $mailable = new RevisedVersionNotify($context, $submission, $uploader, $reviewRound);
-    //             $template = Repo::emailTemplate()->getByKey($context->getId(), RevisedVersionNotify::getEmailTemplateKey());
-    //             $mailable->body($template->getLocalizedData('body'))
-    //                 ->subject($template->getLocalizedData('subject'))
-    //                 ->sender($user)
-    //                 ->recipients($recipients)
-    //                 ->replyTo($context->getData('contactEmail'), $context->getData('contactName'));
-
-    //             Mail::send($mailable);
-    //             $submissionEmailLogDao = DAORegistry::getDAO('SubmissionEmailLogDAO'); /** @var SubmissionEmailLogDAO $submissionEmailLogDao */
-    //             $submissionEmailLogDao->logMailable(
-    //                 SubmissionEmailLogEntry::SUBMISSION_EMAIL_AUTHOR_NOTIFY_REVISED_VERSION,
-    //                 $mailable,
-    //                 $submission,
-    //                 $user
-    //             );
-    //         }
-
-    //         $args[0]->setData('uploaderUserId', '');
-    //     }
-    // }
 
 }
