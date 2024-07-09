@@ -1,6 +1,6 @@
 # CSP Workflow Plugin
 
-Plugin to customize the workflow in Open Journal System (OJS).
+Plugin to customize the workflow in Open Journal System (OJS) according to Cadernos de Saúde Pública da Fiocruz requirements.
 
 **OJS version: 3.4.0.1**
 
