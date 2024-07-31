@@ -14,6 +14,10 @@
 <span class="pkpWorkflow__identificationDivider">
 	-
 </span>
+<span class="pkpWorkflow__identificationSection">
+	{{ currentPublication.sectioTitle }}
+</span>
+<br>
 <span
 	class="pkpWorkflow__identificationTitle"
 	v-html="localizeSubmission(currentPublication.fullTitle, currentPublication.locale)"

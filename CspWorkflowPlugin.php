@@ -55,6 +55,7 @@ class CspWorkflowPlugin extends GenericPlugin {
             Hook::add('submissionfilesuploadform::display', [$this, 'submissionfilesuploadformDisplay']);
             Hook::add('ReviewerAction::confirmReview', [$this, 'reviewerActionConfirmReview']);
             Hook::add('Submission::Collector', [$this, 'submissionCollector']);
+            Hook::add('TemplateManager::display', [$this, 'templateManagerDisplay']);
         }
 
         return $success;
@@ -82,6 +83,15 @@ class CspWorkflowPlugin extends GenericPlugin {
         return __('plugins.generic.cspWorkflow.description');
     }
 
+    public function templateManagerDisplay($hookName, $args){
+        if($args[1] == "workflow/workflow.tpl"){
+            $currentPublication = $args[0]->getState('currentPublication');
+            $section = Repo::section()->get($currentPublication["sectionId"]);
+            $sectioTitle = $section->getLocalizedData('title');
+            $currentPublication["sectioTitle"] = $sectioTitle;
+            $args[0]->setState(["currentPublication" => $currentPublication]);
+        }
+    }
     public function submissionCollector($hookName, $args){
         // Inclui campo submissionIdCSP em retorno de busca
         $request = Application::get()->getRequest();
