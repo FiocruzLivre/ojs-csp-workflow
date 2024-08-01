@@ -35,3 +35,23 @@
 	background-color: unset !important;
 	color: rgba(0,0,0,0.84) !important;
 }
+
+/* Customiza exibição de listagem de submissões no dashboard */
+.listPanel__itemSubtitle, .listPanel__itemTitle, .pkpHeader.-isOneLine .pkpHeader__title{
+	white-space: unset !important;
+	overflow: unset !important;
+	text-overflow: unset !important;
+}
+
+.listPanel__itemExpanded--submission, .listPanel__itemIdentity--submission{
+	padding-inline-start: 3.5rem !important;
+}
+
+/* Customiza exibição de título, autores, ID e sećão em página de fluxo da submissão */
+.pkpWorkflow__identificationAuthor{
+	font-weight: lighter !important;
+}
+
+.pkpWorkflow__identificationTitle, .pkpWorkflow__identificationId, .pkpWorkflow__identificationDivider, .pkpWorkflow__identificationSection{
+	font-weight: bold !important;
+}
