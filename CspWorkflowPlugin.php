@@ -111,10 +111,10 @@ class CspWorkflowPlugin extends GenericPlugin {
                         ->orWhereIn(
                             's.submission_id',
                             fn (Builder $query) => $query
-                                ->select('ss.submission_id')
-                                ->from('submission_settings AS ss')
-                                ->where('ss.setting_name', '=', 'submissionIdCSP')
-                                ->where(DB::raw('LOWER(ss.setting_value)'), 'LIKE', $likePattern)->addBinding($keyword)
+                                ->select('ps.publication_id')
+                                ->from('publication_settings AS ps')
+                                ->where('ps.setting_name', '=', 'submissionIdCSP')
+                                ->where(DB::raw('LOWER(ps.setting_value)'), 'LIKE', $likePattern)->addBinding($keyword)
                         )
                 ));
         }
