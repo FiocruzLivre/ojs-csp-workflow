@@ -15,19 +15,14 @@ namespace APP\plugins\generic\cspWorkflow;
 use PKP\plugins\GenericPlugin;
 use PKP\plugins\Hook;
 use APP\facades\Repo;
-use PKP\session\SessionManager;
 use APP\template\TemplateManager;
-use PKP\submission\PKPSubmission;
 use PKP\db\DAORegistry;
 use APP\core\Application;
 use PKP\controllers\grid\GridColumn;
 use PKP\security\Role;
-use PKP\log\SubmissionEmailLogEntry;
-use APP\core\Services;
-use PKP\mail\mailables\RevisedVersionNotify;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
+use PKP\facades\Locale;
 
 class CspWorkflowPlugin extends GenericPlugin {
 
@@ -84,6 +79,23 @@ class CspWorkflowPlugin extends GenericPlugin {
     }
 
     public function templateManagerDisplay($hookName, $args){
+        if($args[1] == "decision/record.tpl"){
+            $steps = $args[0]->getState('steps');
+            $locale = Locale::getLocale();
+            foreach ($steps as $stepKey => $step ) {
+                if ($step->initialTemplateKey == "EDITOR_RECOMMENDATION") {
+                    $variables = $step->variables[$locale];
+                    foreach ($variables as $variableKey => $variable) {
+                        if ($variable["key"] == "allReviewerComments") {
+                            $reviewerComments = explode('</p><p>',$variable["value"]);
+                            $reviewerRecomendation = str_replace('<p>','',$reviewerComments[0]);
+                            $steps[$stepKey]->variables[$locale][$variableKey]["value"] = $reviewerRecomendation;
+                        }
+                    }
+                }
+            }
+            $args[0]->setState(["steps" => $steps]);
+        }
         if($args[1] == "workflow/workflow.tpl"){
             $currentPublication = $args[0]->getState('currentPublication');
             $section = Repo::section()->get($currentPublication["sectionId"]);
