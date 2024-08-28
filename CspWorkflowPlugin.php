@@ -23,6 +23,9 @@ use PKP\security\Role;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use PKP\facades\Locale;
+use PKP\components\forms\FieldTextarea;
+use PKP\components\forms\FieldText;
+use PKP\components\forms\FieldRadioInput;
 
 class CspWorkflowPlugin extends GenericPlugin {
 
@@ -51,6 +54,7 @@ class CspWorkflowPlugin extends GenericPlugin {
             Hook::add('ReviewerAction::confirmReview', [$this, 'reviewerActionConfirmReview']);
             Hook::add('Submission::Collector', [$this, 'submissionCollector']);
             Hook::add('TemplateManager::display', [$this, 'templateManagerDisplay']);
+            Hook::add('Publication::edit', [$this, 'publicationEdit']);
         }
 
         return $success;
@@ -77,7 +81,14 @@ class CspWorkflowPlugin extends GenericPlugin {
     {
         return __('plugins.generic.cspWorkflow.description');
     }
-
+    public function publicationEdit($hookName, $args){
+        $request = Application::get()->getRequest();
+        $submission = Repo::submission()->get((int) $args[0]->getData('submissionId'));
+        $params['agradecimentos'] = $request->getUserVar('agradecimentos');
+        $params['conflitoInteresse'] = $request->getUserVar('conflitoInteresse');
+        $params['consideracoesEticas'] = $request->getUserVar('consideracoesEticas');
+        Repo::submission()->edit($submission, $params);
+    }
     public function templateManagerDisplay($hookName, $args){
         if($args[1] == "decision/record.tpl"){
             $steps = $args[0]->getState('steps');
@@ -289,6 +300,139 @@ class CspWorkflowPlugin extends GenericPlugin {
             $config =& $args[0];
             $fieldDecision = $revisionDecisionForm->getField('decision');
             $config["fields"][0]["value"] = $fieldDecision->options[1]["value"];
+        }
+        if($args[1]->id == "metadata"){
+            $context = Application::get()->getRequest()->getContext();
+            $publicationId = explode('/',$args[0]["action"]);
+            $publicationId = end($publicationId);
+            $publication = Repo::publication()->get((int)$publicationId);
+            $submission = Repo::submission()->get((int)$publication->_data["submissionId"]);
+
+            $section = Repo::section()->get((int) $publication->getData('sectionId'));
+            $sectionAbbrev = $section->getAbbrev($context->getData('primaryLocale'));
+            $args[1]->addField(new FieldTextarea('agradecimentos', [
+                'label' => __('plugins.generic.CspSubmission.agradecimentos'),
+                'groupId' => 'default',
+                'isRequired' => false,
+                'size' => 'medium'
+            ]));
+            $config = [
+                'name' => 'agradecimentos',
+                'label' => __('plugins.generic.CspSubmission.agradecimentos'),
+                'component' => 'field-textarea',
+                'groupId' => 'default',
+                'isRequired' => false,
+                'value' => $submission->getLocalizedData('agradecimentos')
+            ];
+            $args[0]["fields"][] = $config;
+
+            if($sectionAbbrev == "ESP_TEMATICO") {
+                $args[1]->addField(new FieldText('espacoTematico', [
+                    'label' => __('plugins.generic.CspSubmission.espacoTematico'),
+                    'groupId' => 'default',
+                    'isRequired' => true,
+                    'size' => 'medium',
+                    'value' => $context->getData('espacoTematico'),
+                ]));
+                $config = [
+                    'name' => 'espacoTematico',
+                    'label' => __('plugins.generic.CspSubmission.espacoTematico'),
+                    'component' => 'field-text',
+                    'groupId' => 'default',
+                    'isRequired' => true,
+                    'value' => $submission->getLocalizedData('espacoTematico')
+                ];
+                $args[0]["fields"][] = $config;
+            }
+
+            if($sectionAbbrev == "COMENTARIOS") {
+                $args[1]->addField(new FieldText('codigoArtigoRelacionado', [
+                    'label' => __('plugins.generic.CspSubmission.codigoArtigoRelacionado'),
+                    'groupId' => 'default',
+                    'isRequired' => true,
+                    'size' => 'small',
+                    'value' => $context->getData('codigoArtigoRelacionado'),
+                ]));
+                $config = [
+                    'name' => 'codigoArtigoRelacionado',
+                    'label' => __('plugins.generic.CspSubmission.codigoArtigoRelacionado'),
+                    'component' => 'field-text',
+                    'groupId' => 'default',
+                    'isRequired' => true,
+                    'value' => $submission->getLocalizedData('codigoArtigoRelacionado')
+                ];
+                $args[0]["fields"][] = $config;
+            }
+
+            $args[1]->addField(new FieldText('codigoFasciculoTematico', [
+                'label' => __('plugins.generic.CspSubmission.codigoFasciculoTematico'),
+                'description' => __('plugins.generic.CspSubmission.codigoFasciculoTematico.description'),
+                'groupId' => 'default',
+                'isRequired' => false,
+                'size' => 'medium',
+                'value' => $context->getData('codigoFasciculoTematico'),
+            ]));
+            $config = [
+                'name' => 'codigoFasciculoTematico',
+                'label' => __('plugins.generic.CspSubmission.codigoFasciculoTematico'),
+                'component' => 'field-text',
+                'groupId' => 'default',
+                'isRequired' => false,
+                'value' => $submission->getLocalizedData('codigoFasciculoTematico')
+            ];
+            $args[0]["fields"][] = $config;
+
+            $args[1]->addField(new FieldRadioInput('conflitoInteresse', [
+                'label' => __('plugins.generic.CspSubmission.conflitoInteresse'),
+                'groupId' => 'default',
+                'isRequired' => true,
+                'type' => 'radio',
+                'size' => 'small',
+                'options' => [
+                    ['value' => 'S', 'label' => __('common.yes')],
+                    ['value' => 'N', 'label' => __('common.no')],
+                ],
+                'value' => $context->getData('conflitoInteresse'),
+            ]));
+            $config = [
+                'name' => 'conflitoInteresse',
+                'label' => __('plugins.generic.CspSubmission.conflitoInteresse'),
+                'component' => 'field-radio-input',
+                'groupId' => 'default',
+                'isRequired' => true,
+                'options' => [
+                    ['value' => 'S', 'label' => __('common.yes')],
+                    ['value' => 'N', 'label' => __('common.no')],
+                ],
+                'value' => $submission->getLocalizedData('conflitoInteresse')
+            ];
+            $args[0]["fields"][] = $config;
+
+            $args[1]->addField(new FieldRadioInput('consideracoesEticas', [
+                'label' => __('plugins.generic.CspSubmission.consideracoesEticas'),
+                'groupId' => 'default',
+                'isRequired' => true,
+                'type' => 'radio',
+                'size' => 'small',
+                'options' => [
+                    ['value' => 'S', 'label' => __('plugins.generic.CspSubmission.consideracoesEticas.checkbox.yes')],
+                    ['value' => 'N', 'label' => __('plugins.generic.CspSubmission.consideracoesEticas.checkbox.no')],
+                ],
+                'value' => $context->getData('consideracoesEticas'),
+            ]));
+            $config = [
+                'name' => 'consideracoesEticas',
+                'label' => __('plugins.generic.CspSubmission.consideracoesEticas'),
+                'component' => 'field-radio-input',
+                'groupId' => 'default',
+                'isRequired' => true,
+                'options' => [
+                    ['value' => 'S', 'label' => __('plugins.generic.CspSubmission.consideracoesEticas.checkbox.yes')],
+                    ['value' => 'N', 'label' => __('plugins.generic.CspSubmission.consideracoesEticas.checkbox.no')],
+                ],
+                'value' => $submission->getLocalizedData('consideracoesEticas')
+            ];
+            $args[0]["fields"][] = $config;
         }
     }
 
