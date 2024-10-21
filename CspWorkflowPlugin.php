@@ -141,6 +141,9 @@ class CspWorkflowPlugin extends GenericPlugin {
                         )
                 ));
         }
+        // Ordena a lista de submissões em ordem decrescente de data de modificação
+        $args[0]->orders[0]["column"] = 's.date_last_activity';
+        $args[1]->orderBy = 'dateLastActivity';
     }
 
     public function templateManagerFetch($hookName, $args) {
