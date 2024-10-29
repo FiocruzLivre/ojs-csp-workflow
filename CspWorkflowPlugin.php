@@ -90,16 +90,17 @@ class CspWorkflowPlugin extends GenericPlugin {
         Repo::submission()->edit($submission, $params);
     }
     public function templateManagerDisplay($hookName, $args){
+        // Remove recomendação de avaliadores em email de solicitação de modificações ao autor
         if($args[1] == "decision/record.tpl"){
             $steps = $args[0]->getState('steps');
             $locale = Locale::getLocale();
             foreach ($steps as $stepKey => $step ) {
-                if ($step->initialTemplateKey == "EDITOR_RECOMMENDATION") {
+                if ($step->initialTemplateKey == "EDITOR_DECISION_RESUBMIT") {
                     $variables = $step->variables[$locale];
                     foreach ($variables as $variableKey => $variable) {
                         if ($variable["key"] == "allReviewerComments") {
-                            $reviewerComments = explode('</p><p>',$variable["value"]);
-                            $reviewerRecomendation = str_replace('<p>','',$reviewerComments[0]);
+                            preg_match('~<br>(.*?)</p>~', $variable["value"], $output);
+                            $reviewerRecomendation = str_replace($output[1],'',$variable["value"]);
                             $steps[$stepKey]->variables[$locale][$variableKey]["value"] = $reviewerRecomendation;
                         }
                     }
