@@ -203,6 +203,14 @@ class CspWorkflowPlugin extends GenericPlugin {
             }
         }
         if($args[1] == "controllers/grid/gridRow.tpl"){
+            $user = Repo::user()->get($_SESSION["userId"], true);
+            $submissionId = $templateVars["request"]->getUservar('submissionId');
+            $publication = Repo::publication()->get((int) $submissionId);
+            foreach ($publication->_data["authors"] as $key => $value) {
+                if ($value->getData('email') == $user->getData('email')) {
+                    return;
+                }
+            }
             if(substr($templateVars["grid"]->_id,0,10) == "grid-files"){
                 /**
                  * Em lista (grid) de arquivos,
