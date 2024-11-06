@@ -1,4 +1,5 @@
 .listPanel__item button.expander,
+.listPanel__item--submission__flags,
 div[id^='pkp_notification'] {
 	display: none !important;
 }

@@ -90,7 +90,9 @@ class CspWorkflowPlugin extends GenericPlugin {
         Repo::submission()->edit($submission, $params);
     }
     public function templateManagerDisplay($hookName, $args){
-        // Adiciona CSS específico para autor não visualizar status do fluxo
+        /* Adiciona CSS específico para remover visualização status do fluxo 
+        para usuários que não tenham nenhum dos seguintes papéis:
+        Gerente, Editor de seção, Assistente a Admin */
         if($args[1] == "dashboard/index.tpl" or $args[1] == "authorDashboard/authorDashboard.tpl"){
             $request = Application::get()->getRequest();
             $userRoles = $request->getUser()->getRoles($request->getContext()->getId());
@@ -101,12 +103,12 @@ class CspWorkflowPlugin extends GenericPlugin {
                 $userRolesArray,
                 [
                     Role::ROLE_ID_MANAGER,
-                    Role::ROLE_ID_SITE_ADMIN,
+                    Role::ROLE_ID_SUB_EDITOR.
                     Role::ROLE_ID_ASSISTANT,
-                    Role::ROLE_ID_SUB_EDITOR
+                    Role::ROLE_ID_SITE_ADMIN
                 ]
                 ) == null){
-                    $url = $request->getBaseUrl() . '/' . $this->getPluginPath() . '/styles/author.css';
+                    $url = $request->getBaseUrl() . '/' . $this->getPluginPath() . '/styles/hideStatus.css';
                     $templateMgr = TemplateManager::getManager($request);
                     $templateMgr->addStyleSheet('Author', $url, ['contexts' => 'backend']);
             }
