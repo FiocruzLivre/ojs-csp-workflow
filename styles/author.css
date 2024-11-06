@@ -1,0 +1,4 @@
+.listPanel__item button.expander,
+div[id^='pkp_notification'] {
+	display: none !important;
+}

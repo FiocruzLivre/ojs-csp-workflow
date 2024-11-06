@@ -90,6 +90,28 @@ class CspWorkflowPlugin extends GenericPlugin {
         Repo::submission()->edit($submission, $params);
     }
     public function templateManagerDisplay($hookName, $args){
+        // Adiciona CSS específico para autor não visualizar status do fluxo
+        if($args[1] == "dashboard/index.tpl" or $args[1] == "authorDashboard/authorDashboard.tpl"){
+            $request = Application::get()->getRequest();
+            $userRoles = $request->getUser()->getRoles($request->getContext()->getId());
+            foreach ($userRoles as $roles => $role) {
+                $userRolesArray[] = $role->getData('id');
+            }
+            if(array_intersect(
+                $userRolesArray,
+                [
+                    Role::ROLE_ID_MANAGER,
+                    Role::ROLE_ID_SITE_ADMIN,
+                    Role::ROLE_ID_ASSISTANT,
+                    Role::ROLE_ID_SUB_EDITOR
+                ]
+                ) == null){
+                    $url = $request->getBaseUrl() . '/' . $this->getPluginPath() . '/styles/author.css';
+                    $templateMgr = TemplateManager::getManager($request);
+                    $templateMgr->addStyleSheet('Author', $url, ['contexts' => 'backend']);
+            }
+        }
+
         // Remove recomendação de avaliadores em email de solicitação de modificações ao autor
         if($args[1] == "decision/record.tpl"){
             $steps = $args[0]->getState('steps');
