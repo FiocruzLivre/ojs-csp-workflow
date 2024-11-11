@@ -229,7 +229,8 @@ class CspWorkflowPlugin extends GenericPlugin {
         if($args[1] == "controllers/grid/gridRow.tpl"){
             $user = Repo::user()->get($_SESSION["userId"], true);
             $submissionId = $templateVars["request"]->getUservar('submissionId');
-            $publication = Repo::publication()->get((int) $submissionId);
+            $submission = Repo::submission()->get((int) $submissionId);
+            $publication = Repo::publication()->get((int) $submission->getData('currentPublicationId'));
             foreach ($publication->_data["authors"] as $key => $value) {
                 if ($value->getData('email') == $user->getData('email')) {
                     return;
@@ -296,7 +297,8 @@ class CspWorkflowPlugin extends GenericPlugin {
         $context = $request->getContext();
         $file =& $args[1];
         $fileArray = explode('.', $file->getData('path'));
-        $publication = Repo::publication()->get((int) $args[1]->getData('submissionId'));
+        $submission = Repo::submission()->get((int) $args[1]->getData('submissionId'));
+        $publication = Repo::publication()->get((int) $submission->getData('currentPublicationId'));
         // Renomeia arquivos de primeira versão enviados por autor
         if($args[0]->getData('revisedFileId') == "" && $args[0]->getData('fileStage') == 2){
             $file->setData('name', 'csp_' . str_replace('/', '_', $publication->getData('submissionIdCSP')) .'_V1.' . $fileArray[1], $file->getData('locale'));
