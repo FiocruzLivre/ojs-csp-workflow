@@ -229,41 +229,41 @@ class CspWorkflowPlugin extends GenericPlugin {
         if($args[1] == "controllers/grid/gridRow.tpl"){
             $user = Repo::user()->get($_SESSION["userId"], true);
             $submissionId = $templateVars["request"]->getUservar('submissionId');
-            $submission = Repo::submission()->get((int) $submissionId);
-            $publication = Repo::publication()->get((int) $submission->getData('currentPublicationId'));
-            foreach ($publication->_data["authors"] as $key => $value) {
-                if ($value->getData('email') == $user->getData('email')) {
-                    return;
+            if ($submissionId) {
+                $submission = Repo::submission()->get((int) $submissionId);
+                $publication = Repo::publication()->get((int) $submission->getData('currentPublicationId'));
+                foreach ($publication->_data["authors"] as $key => $value) {
+                    if ($value->getData('email') == $user->getData('email')) {
+                        return;
+                    }
                 }
-            }
-            if(substr($templateVars["grid"]->_id,0,10) == "grid-files"){
                 /**
                  * Em lista (grid) de arquivos,
                  * substitui tipo do arquivo por comentário sobre o arquivo e adiciona nome de pessoa que incluiu o arquivo
                  */
-                $args[0]->tpl_vars["columns"]->value['notes'] = new GridColumn('notes', 'common.note');
-                $noteDao = DAORegistry::getDAO('NoteDAO'); /** @var NoteDAO $noteDao */
-                $notes = $noteDao->getByAssoc(Application::ASSOC_TYPE_SUBMISSION_FILE, $args[0]->tpl_vars["row"]->value->_id)->toArray();;
-                foreach ($notes as $key => $value) {
-                    $content[] = $value->getContents('contents');
-                }
-                $note = $content <> null ? implode('<hr>', $content) : "";
-                $typePosition = array_search("type", array_keys($args[0]->tpl_vars["columns"]->value));
-                $args[0]->tpl_vars["cells"]->value[$typePosition] = "<span id='cell-".
-                                                        $templateVars["row"]->_id.
-                                                        "-note' class='gridCellContainer'>
-                                                        <span class='label'>".$note.
-                                                        "</span></span>";
-
-                $args[0]->tpl_vars["columns"]->value['user'] = new GridColumn('notes', 'user.name');
-                if(isset($templateVars["row"]->_data["submissionFile"])){
-                    $user = Repo::user()->get($templateVars["row"]->_data["submissionFile"]->_data["uploaderUserId"])->getGivenName($templateVars["currentLocale"]);
-                    $args[0]->tpl_vars["cells"]->value[] = "<span id='cell-".$user.
-                                                            "-user' class='gridCellContainer'>
-                                                            <span class='label'>".$user.
+                if(substr($templateVars["grid"]->_id,0,10) == "grid-files"){
+                    $args[0]->tpl_vars["columns"]->value['notes'] = new GridColumn('notes', 'common.note');
+                    $noteDao = DAORegistry::getDAO('NoteDAO'); /** @var NoteDAO $noteDao */
+                    $notes = $noteDao->getByAssoc(Application::ASSOC_TYPE_SUBMISSION_FILE, $args[0]->tpl_vars["row"]->value->_id)->toArray();;
+                    foreach ($notes as $key => $value) {
+                        $content[] = $value->getContents('contents');
+                    }
+                    $note = $content <> null ? implode('<hr>', $content) : "";
+                    $typePosition = array_search("type", array_keys($args[0]->tpl_vars["columns"]->value));
+                    $args[0]->tpl_vars["cells"]->value[$typePosition] = "<span id='cell-".
+                                                            $templateVars["row"]->_id.
+                                                            "-note' class='gridCellContainer'>
+                                                            <span class='label'>".$note.
                                                             "</span></span>";
+                    $args[0]->tpl_vars["columns"]->value['user'] = new GridColumn('notes', 'user.name');
+                    if(isset($templateVars["row"]->_data["submissionFile"])){
+                        $user = Repo::user()->get($templateVars["row"]->_data["submissionFile"]->_data["uploaderUserId"])->getGivenName($templateVars["currentLocale"]);
+                        $args[0]->tpl_vars["cells"]->value[] = "<span id='cell-".$user.
+                                                                "-user' class='gridCellContainer'>
+                                                                <span class='label'>".$user.
+                                                                "</span></span>";
+                    }
                 }
-
             }
         }
         // Altera a largura das colunas (grid) em diferentes estágios
