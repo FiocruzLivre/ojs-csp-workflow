@@ -173,6 +173,7 @@ class CspWorkflowPlugin extends GenericPlugin {
 
     public function templateManagerFetch($hookName, $args) {
         $templateVars = $args[0]->getTemplateVars();
+        $request = Application::get()->getRequest();
         // Limita a 5 os itens da lista de avaliadores em caixa de Adicionar avaliador
         if($args[1] == "controllers/grid/users/reviewer/form/advancedSearchReviewerForm.tpl"){
             $args[0]
@@ -186,7 +187,6 @@ class CspWorkflowPlugin extends GenericPlugin {
         /* Em caixa de Adicionar comentário, exibe somente a secretaria como opção de participantes da conversa
         para perfis que não são Gerente, Admin, Editor Chefe ou Assistente de Edição*/
         if($args[1] == "controllers/grid/queries/form/queryForm.tpl"){
-            $request = Application::get()->getRequest();
             $userRoles = $request->getUser()->getRoles($request->getContext()->getId());
             foreach ($userRoles as $roles => $role) {
                 $userRolesArray[] = $role->getData('id');
@@ -228,7 +228,7 @@ class CspWorkflowPlugin extends GenericPlugin {
         }
         if($args[1] == "controllers/grid/gridRow.tpl"){
             $user = Repo::user()->get($_SESSION["userId"], true);
-            $submissionId = $templateVars["request"]->getUservar('submissionId');
+            $submissionId = $request->getUserVar('submissionId');
             if ($submissionId) {
                 $submission = Repo::submission()->get((int) $submissionId);
                 $publication = Repo::publication()->get((int) $submission->getData('currentPublicationId'));
