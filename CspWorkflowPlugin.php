@@ -123,8 +123,9 @@ class CspWorkflowPlugin extends GenericPlugin {
                     $variables = $step->variables[$locale];
                     foreach ($variables as $variableKey => $variable) {
                         if ($variable["key"] == "allReviewerComments") {
-                            preg_match('~<br>(.*?)</p>~', $variable["value"], $output);
-                            $reviewerRecomendation = str_replace($output[1],'',$variable["value"]);
+                            $reviewerRecomendation = str_replace('Recomendação: Aceitar','',$variable["value"]);
+                            $reviewerRecomendation = str_replace('Recomendação: Rejeitar','',$reviewerRecomendation);
+                            $reviewerRecomendation = str_replace('Recomendação: Correções obrigatórias','',$reviewerRecomendation);
                             $steps[$stepKey]->variables[$locale][$variableKey]["value"] = $reviewerRecomendation;
                         }
                     }
@@ -219,7 +220,7 @@ class CspWorkflowPlugin extends GenericPlugin {
             }
         }
         // Restringe Recomendação de avaliador a Aceitar, Rejeitar e Correções obrigatórias
-        if($args[1] == "reviewer/review/step3.tpl"){
+        if($args[1] == "reviewer/review/step3.tpl" or $args[1] == "controllers/grid/users/reviewer/readReview.tpl"){
             foreach ($templateVars["reviewerRecommendationOptions"] as $key => $value) {
                 if(!in_array($value,["common.chooseOne", "reviewer.article.decision.accept", "reviewer.article.decision.pendingRevisions", "reviewer.article.decision.decline" ])){
                     unset($args[0]->tpl_vars["reviewerRecommendationOptions"]->value[$key]);
