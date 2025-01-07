@@ -55,3 +55,10 @@
 .pkpWorkflow__identificationTitle, .pkpWorkflow__identificationId, .pkpWorkflow__identificationDivider, .pkpWorkflow__identificationSection{
 	font-weight: bold !important;
 }
+
+/* Remove excesso de texto em envio de email de decisão durante o fluxo editorial */
+.pkp_page_decision.pkp_op_record .app__page--decision .app__pageHeading,
+.pkp_page_decision.pkp_op_record .app__page--decision .app__pageDescription,
+.pkp_page_decision.pkp_op_record .app__page--decision .panelSection__header{
+	display: none;
+}
