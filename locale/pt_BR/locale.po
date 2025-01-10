@@ -14,3 +14,6 @@ msgstr "Fluxo CSP"
 
 msgid "plugins.generic.cspWorkflow.description"
 msgstr "Personaliza o fluxo do OJS de acordo com o Cadernos de Saúde Pública da Fiocruz."
+
+msgid "plugins.generic.cspWorkflow.submissionIdCSP"
+msgstr "ID do Sagas"

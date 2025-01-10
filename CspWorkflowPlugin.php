@@ -26,6 +26,8 @@ use PKP\facades\Locale;
 use PKP\components\forms\FieldTextarea;
 use PKP\components\forms\FieldText;
 use PKP\components\forms\FieldRadioInput;
+use APP\decision\Decision;
+use PKP\core\PKPString;
 
 class CspWorkflowPlugin extends GenericPlugin {
 
@@ -87,7 +89,22 @@ class CspWorkflowPlugin extends GenericPlugin {
         $params['agradecimentos'] = $request->getUserVar('agradecimentos');
         $params['conflitoInteresse'] = $request->getUserVar('conflitoInteresse');
         $params['consideracoesEticas'] = $request->getUserVar('consideracoesEticas');
+        if($args[2]["dateSubmitted"] && $args[2]["dateAccepted"]){
+            $dateSubmitted = explode('/',$request->getUserVar('dateSubmitted'));
+            $params['dateSubmitted'] = $dateSubmitted[2].'-'.$dateSubmitted[1].'-'.$dateSubmitted[0];
+            $dateAccepted = explode('/',$request->getUserVar('dateAccepted'));
+            DB::table('edit_decisions')->updateOrInsert(
+                ['submission_id' => (int) $args[0]->getData('submissionId'),
+                'review_round_id' => null,
+                'stage_id' => 1,
+                'round' => null,
+                'editor_id' => 1,
+                'decision' => Decision::ACCEPT,
+                'date_decided' => $dateAccepted[2].'-'.$dateAccepted[1].'-'.$dateAccepted[0]]
+            );
+        }
         Repo::submission()->edit($submission, $params);
+
     }
     public function templateManagerDisplay($hookName, $args){
         /* Adiciona CSS específico para remover visualização status do fluxo 
@@ -334,6 +351,71 @@ class CspWorkflowPlugin extends GenericPlugin {
      * passa segundo campo selecionado ("Solicitar modificações ao autor que estarão sujeitos a avaliação futura.")
      */
     public function FormConfigAfter($hookName, $args) {
+        $context = Application::get()->getRequest()->getContext();
+        $publicationId = explode('/',$args[0]["action"]);
+        $publicationId = end($publicationId);
+        $publication = Repo::publication()->get((int)$publicationId);
+        $submission = Repo::submission()->get((int)$publication->_data["submissionId"]);
+        if($args[0]["id"] == "titleAbstract"){
+            $args[1]->addField(new FieldText('submissionIdCSP', [
+                'label' => __('plugins.generic.cspWorkflow.submissionIdCSP'),
+                'groupId' => 'default',
+                'isRequired' => true,
+                'size' => 'medium'
+            ]));
+            $config = [
+                'name' => 'submissionIdCSP',
+                'label' => __('plugins.generic.cspWorkflow.submissionIdCSP'),
+                'component' => 'field-text',
+                'groupId' => 'default',
+                'isRequired' => true,
+                'value' => $submission->getData('submissionIdCSP')
+            ];
+            $args[0]["fields"][] = $config;
+        }
+        if($args[0]["id"] == "issueEntry"){
+            $dateFormatShort = PKPString::convertStrftimeFormat($context->getLocalizedDateFormatShort());
+
+            $args[1]->addField(new FieldText('dateSubmitted', [
+                'label' => __('plugins.themes.csp.dates.received'),
+                'groupId' => 'default',
+                'isRequired' => true,
+                'size' => 'medium'
+            ]));
+            $timestampDateSubmitted = strtotime($submission->getData('dateSubmitted'));
+            $config = [
+                'name' => 'dateSubmitted',
+                'label' => __('plugins.themes.csp.dates.received'),
+                'component' => 'field-text',
+                'groupId' => 'default',
+                'isRequired' => true,
+                'value' => date($dateFormatShort, $timestampDateSubmitted),
+            ];
+            $args[0]["fields"][] = $config;
+
+            $args[1]->addField(new FieldText('dateAccepted', [
+                'label' => __('plugins.themes.csp.dates.accepted'),
+                'groupId' => 'default',
+                'isRequired' => true,
+                'size' => 'medium'
+            ]));
+            $decisionsAcceptedArray = Repo::decision()->getCollector()
+            ->filterBySubmissionIds([$publication->_data["submissionId"]])
+            ->filterByDecisionTypes([Decision::ACCEPT])
+            ->getMany()
+            ->toArray();
+            $decisionsAccepted = current($decisionsAcceptedArray);
+            $config = [
+                'name' => 'dateAccepted',
+                'label' => __('plugins.themes.csp.dates.accepted'),
+                'component' => 'field-text',
+                'groupId' => 'default',
+                'isRequired' => true,
+                'value' => date($dateFormatShort, $decisionsAccepted ? strtotime($decisionsAccepted->getData('dateDecided')) : null),
+            ];
+            $args[0]["fields"][] = $config;
+        }
+
         if($args[0]["id"] == "selectRevisionDecision"){
             $revisionDecisionForm = $args[1];
             $config =& $args[0];
@@ -341,14 +423,9 @@ class CspWorkflowPlugin extends GenericPlugin {
             $config["fields"][0]["value"] = $fieldDecision->options[1]["value"];
         }
         if($args[1]->id == "metadata"){
-            $context = Application::get()->getRequest()->getContext();
-            $publicationId = explode('/',$args[0]["action"]);
-            $publicationId = end($publicationId);
-            $publication = Repo::publication()->get((int)$publicationId);
-            $submission = Repo::submission()->get((int)$publication->_data["submissionId"]);
-
             $section = Repo::section()->get((int) $publication->getData('sectionId'));
             $sectionAbbrev = $section->getAbbrev($context->getData('primaryLocale'));
+
             $args[1]->addField(new FieldTextarea('agradecimentos', [
                 'label' => __('plugins.generic.CspSubmission.agradecimentos'),
                 'groupId' => 'default',
@@ -501,5 +578,5 @@ class CspWorkflowPlugin extends GenericPlugin {
     public function reviewerActionConfirmReview($hookName, $args) {
         unset($args[2]->to);
     }
-
 }
+
