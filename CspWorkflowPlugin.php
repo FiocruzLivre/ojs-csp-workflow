@@ -352,11 +352,11 @@ class CspWorkflowPlugin extends GenericPlugin {
      */
     public function FormConfigAfter($hookName, $args) {
         $context = Application::get()->getRequest()->getContext();
-        $publicationId = explode('/',$args[0]["action"]);
-        $publicationId = end($publicationId);
-        $publication = Repo::publication()->get((int)$publicationId);
-        $submission = Repo::submission()->get((int)$publication->_data["submissionId"]);
         if($args[0]["id"] == "titleAbstract"){
+            $publicationId = explode('/',$args[0]["action"]);
+            $publicationId = end($publicationId);
+            $publication = Repo::publication()->get((int)$publicationId);
+            $submission = Repo::submission()->get((int)$publication->_data["submissionId"]);
             $args[1]->addField(new FieldText('submissionIdCSP', [
                 'label' => __('plugins.generic.cspWorkflow.submissionIdCSP'),
                 'groupId' => 'default',
@@ -374,8 +374,12 @@ class CspWorkflowPlugin extends GenericPlugin {
             $args[0]["fields"][] = $config;
         }
         if($args[0]["id"] == "issueEntry"){
-            $dateFormatShort = PKPString::convertStrftimeFormat($context->getLocalizedDateFormatShort());
+            $publicationId = explode('/',$args[0]["action"]);
+            $publicationId = end($publicationId);
+            $publication = Repo::publication()->get((int)$publicationId);
+            $submission = Repo::submission()->get((int)$publication->_data["submissionId"]);
 
+            $dateFormatShort = PKPString::convertStrftimeFormat($context->getLocalizedDateFormatShort());
             $args[1]->addField(new FieldText('dateSubmitted', [
                 'label' => __('plugins.themes.csp.dates.received'),
                 'groupId' => 'default',
@@ -423,6 +427,11 @@ class CspWorkflowPlugin extends GenericPlugin {
             $config["fields"][0]["value"] = $fieldDecision->options[1]["value"];
         }
         if($args[1]->id == "metadata"){
+            $publicationId = explode('/',$args[0]["action"]);
+            $publicationId = end($publicationId);
+            $publication = Repo::publication()->get((int)$publicationId);
+            $submission = Repo::submission()->get((int)$publication->_data["submissionId"]);
+
             $section = Repo::section()->get((int) $publication->getData('sectionId'));
             $sectionAbbrev = $section->getAbbrev($context->getData('primaryLocale'));
 
