@@ -363,15 +363,6 @@ class CspWorkflowPlugin extends GenericPlugin {
                 'isRequired' => true,
                 'size' => 'medium'
             ]));
-            $config = [
-                'name' => 'submissionIdCSP',
-                'label' => __('plugins.generic.cspWorkflow.submissionIdCSP'),
-                'component' => 'field-text',
-                'groupId' => 'default',
-                'isRequired' => true,
-                'value' => $submission->getData('submissionIdCSP')
-            ];
-            $args[0]["fields"][] = $config;
         }
         if($args[0]["id"] == "issueEntry"){
             $publicationId = explode('/',$args[0]["action"]);
@@ -416,6 +407,16 @@ class CspWorkflowPlugin extends GenericPlugin {
                 'groupId' => 'default',
                 'isRequired' => true,
                 'value' => date($dateFormatShort, $decisionsAccepted ? strtotime($decisionsAccepted->getData('dateDecided')) : null),
+            ];
+            $args[0]["fields"][] = $config;
+
+            $config = [
+                'name' => 'submissionIdCSP',
+                'label' => __('plugins.generic.cspWorkflow.submissionIdCSP'),
+                'component' => 'field-text',
+                'groupId' => 'default',
+                'isRequired' => true,
+                'value' => $submission->getData('submissionIdCSP')
             ];
             $args[0]["fields"][] = $config;
         }
