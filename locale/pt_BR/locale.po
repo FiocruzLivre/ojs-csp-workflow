@@ -17,3 +17,6 @@ msgstr "Personaliza o fluxo do OJS de acordo com o Cadernos de Saúde Pública d
 
 msgid "plugins.generic.cspWorkflow.submissionIdCSP"
 msgstr "ID do Sagas"
+
+msgid "plugins.generic.cspWorkflow.dates.description"
+msgstr "<b>Atenção!!</b> A alteração do ano da data de submissão irá ocasionar inconsistência na geração do Id do CSP</b>"

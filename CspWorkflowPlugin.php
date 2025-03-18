@@ -57,6 +57,8 @@ class CspWorkflowPlugin extends GenericPlugin {
             Hook::add('Submission::Collector', [$this, 'submissionCollector']);
             Hook::add('TemplateManager::display', [$this, 'templateManagerDisplay']);
             Hook::add('Publication::edit', [$this, 'publicationEdit']);
+            Hook::add('Publication::publish::before', [$this, 'PublicationPublishBefore']);
+            Hook::add('quicksubmitform::readuservars', [$this, 'quicksubmitformReaduservars']);
         }
 
         return $success;
@@ -90,9 +92,7 @@ class CspWorkflowPlugin extends GenericPlugin {
         $params['conflitoInteresse'] = $request->getUserVar('conflitoInteresse');
         $params['consideracoesEticas'] = $request->getUserVar('consideracoesEticas');
         if($args[2]["dateSubmitted"] && $args[2]["dateAccepted"]){
-            $dateSubmitted = explode('/',$request->getUserVar('dateSubmitted'));
-            $params['dateSubmitted'] = $dateSubmitted[2].'-'.$dateSubmitted[1].'-'.$dateSubmitted[0];
-            $dateAccepted = explode('/',$request->getUserVar('dateAccepted'));
+            $params['dateSubmitted'] = $request->getUserVar('dateSubmitted');
             DB::table('edit_decisions')->updateOrInsert(
                 ['submission_id' => (int) $args[0]->getData('submissionId'),
                 'review_round_id' => null,
@@ -100,7 +100,7 @@ class CspWorkflowPlugin extends GenericPlugin {
                 'round' => null,
                 'editor_id' => 1,
                 'decision' => Decision::ACCEPT,
-                'date_decided' => $dateAccepted[2].'-'.$dateAccepted[1].'-'.$dateAccepted[0]]
+                'date_decided' => $request->getUserVar('dateAccepted')]
             );
         }
         Repo::submission()->edit($submission, $params);
@@ -275,7 +275,8 @@ class CspWorkflowPlugin extends GenericPlugin {
                                                             "</span></span>";
                     $args[0]->tpl_vars["columns"]->value['user'] = new GridColumn('notes', 'user.name');
                     if(isset($templateVars["row"]->_data["submissionFile"])){
-                        $user = Repo::user()->get($templateVars["row"]->_data["submissionFile"]->_data["uploaderUserId"])->getGivenName($templateVars["currentLocale"]);
+                        $user = Repo::user()->get($templateVars["row"]->_data["submissionFile"]->_data["uploaderUserId"]);
+                        $user = $user->getGivenName($templateVars["currentLocale"]);
                         $args[0]->tpl_vars["cells"]->value[] = "<span id='cell-".$user.
                                                                 "-user' class='gridCellContainer'>
                                                                 <span class='label'>".$user.
@@ -371,7 +372,7 @@ class CspWorkflowPlugin extends GenericPlugin {
             $submission = Repo::submission()->get((int)$publication->_data["submissionId"]);
 
             $dateFormatShort = PKPString::convertStrftimeFormat($context->getLocalizedDateFormatShort());
-            $args[1]->addField(new FieldText('dateSubmitted', [
+            $args[1]->addField(new \PKP\components\forms\FieldHTML('dateSubmitted', [
                 'label' => __('plugins.themes.csp.dates.received'),
                 'groupId' => 'default',
                 'isRequired' => true,
@@ -381,10 +382,11 @@ class CspWorkflowPlugin extends GenericPlugin {
             $config = [
                 'name' => 'dateSubmitted',
                 'label' => __('plugins.themes.csp.dates.received'),
+                'description' => __('plugins.generic.cspWorkflow.dates.description'),
                 'component' => 'field-text',
                 'groupId' => 'default',
                 'isRequired' => true,
-                'value' => date($dateFormatShort, $timestampDateSubmitted),
+                'value' => date('Y-m-d', $timestampDateSubmitted),
             ];
             $args[0]["fields"][] = $config;
 
@@ -399,14 +401,14 @@ class CspWorkflowPlugin extends GenericPlugin {
             ->filterByDecisionTypes([Decision::ACCEPT])
             ->getMany()
             ->toArray();
-            $decisionsAccepted = current($decisionsAcceptedArray);
+            $decisionsAccepted = end($decisionsAcceptedArray);
             $config = [
                 'name' => 'dateAccepted',
                 'label' => __('plugins.themes.csp.dates.accepted'),
                 'component' => 'field-text',
                 'groupId' => 'default',
                 'isRequired' => true,
-                'value' => date($dateFormatShort, $decisionsAccepted ? strtotime($decisionsAccepted->getData('dateDecided')) : null),
+                'value' => date('Y-m-d', $decisionsAccepted ? strtotime($decisionsAccepted->getData('dateDecided')) : null),
             ];
             $args[0]["fields"][] = $config;
 
@@ -588,5 +590,32 @@ class CspWorkflowPlugin extends GenericPlugin {
     public function reviewerActionConfirmReview($hookName, $args) {
         unset($args[2]->to);
     }
+
+    // Lê campos adicionados no formulário do plugin quickSubmission
+	function quicksubmitformReaduservars($hookName, $params){
+		$params[1][] = "dateAccepted";
+		$params[1][] = "dateSubmitted";
+		$params[1][] = "submissionIdCSP";
+	}
+
+    function PublicationPublishBefore($hookName, $params){
+        // Salva conteúdo de campos adicionados no plugin quickSubmission
+        $request = Application::get()->getRequest();
+		$params[0]->setData('submissionIdCSP',$request->getUserVar('submissionIdCSP'));
+        $submission = Repo::submission()->get((int) $params[0]->getData('submissionId'));
+        if($request->getUserVar('dateSubmitted') && $request->getUserVar('dateAccepted')){
+            $params['dateSubmitted'] = $request->getUserVar('dateSubmitted');
+            DB::table('edit_decisions')->updateOrInsert(
+                ['submission_id' => (int) $params[0]->getData('submissionId'),
+                'review_round_id' => null,
+                'stage_id' => 1,
+                'round' => null,
+                'editor_id' => 1,
+                'decision' => Decision::ACCEPT,
+                'date_decided' => $request->getUserVar('dateAccepted')]
+            );
+        }
+        Repo::submission()->edit($submission, $params);
+	}
 }
 
