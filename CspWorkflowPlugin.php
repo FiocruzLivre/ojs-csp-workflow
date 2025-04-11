@@ -133,6 +133,7 @@ class CspWorkflowPlugin extends GenericPlugin {
             }
         }
 
+        // Exibe somente avaliações lidas e encaminhadas em template de email com variável allReviewerComments
         // Remove recomendação de avaliadores em email de solicitação de modificações ao autor
         if($args[1] == "decision/record.tpl"){
             $steps = $args[0]->getState('steps');
