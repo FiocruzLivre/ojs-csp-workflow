@@ -143,39 +143,33 @@ class CspWorkflowPlugin extends GenericPlugin {
                 $variables = $step->variables[$locale];
                 foreach ($variables as $variableKey => $variable) {
                     if ($variable["key"] == "allReviewerComments") {
-                        if ($step->initialTemplateKey == "EDITOR_DECISION_RESUBMIT") {
-                            $reviewerRecomendation = str_replace('Recomendação: Aceitar','',$variable["value"]);
-                            $reviewerRecomendation = str_replace('Recomendação: Rejeitar','',$reviewerRecomendation);
-                            $reviewerRecomendation = str_replace('Recomendação: Correções obrigatórias','',$reviewerRecomendation);
-                            $steps[$stepKey]->variables[$locale][$variableKey]["value"] = $reviewerRecomendation;
-                        }
-                        if ($step->initialTemplateKey == "EDITOR_RECOMMENDATION") {
-                            $reviewAssignmentDao = DAORegistry::getDAO('ReviewAssignmentDAO');
-                            $reviewAssignments = $reviewAssignmentDao->getBySubmissionId($templateVars["submission"]->getData('id'), $request->getUserVar('reviewRoundId'), $templateVars["submission"]->getData('stageId'));
-                            $submissionCommentDao = DAORegistry::getDAO('SubmissionCommentDAO');
-                            $reviewerNumber = 0;
-                            $comments = [];
-                            foreach ($reviewAssignments as $reviewAssignment) {
-                                if ($reviewAssignment->_data["considered"] == 2) {
-                                    $reviewerNumber++;
-                                    $submissionComments = $submissionCommentDao->getReviewerCommentsByReviewerId(
-                                        $templateVars["submission"]->getData('id'),
-                                        $reviewAssignment->getReviewerId(),
-                                        $reviewAssignment->getId(),
-                                        true
-                                    );
-                                    $reviewerIdentity = $reviewAssignment->getReviewMethod() == ReviewAssignment::SUBMISSION_REVIEW_METHOD_OPEN
-                                        ? $reviewAssignment->getReviewerFullName()
-                                        : __('submission.comments.importPeerReviews.reviewerLetter', ['reviewerLetter' => $reviewerNumber]);
-                                    $recommendation = $reviewAssignment->getLocalizedRecommendation();
-                                    $commentsBody = '';
-                                    /** @var SubmissionComment $comment */
-                                    while ($comment = $submissionComments->next()) {
-                                        // If the comment is viewable by the author, then add the comment.
-                                        if ($comment->getViewable()) {
-                                            $commentsBody .= PKPString::stripUnsafeHtml($comment->getComments());
-                                        }
+                        $reviewAssignmentDao = DAORegistry::getDAO('ReviewAssignmentDAO');
+                        $reviewAssignments = $reviewAssignmentDao->getBySubmissionId($templateVars["submission"]->getData('id'), $request->getUserVar('reviewRoundId'), $templateVars["submission"]->getData('stageId'));
+                        $submissionCommentDao = DAORegistry::getDAO('SubmissionCommentDAO');
+                        $reviewerNumber = 0;
+                        $comments = [];
+                        foreach ($reviewAssignments as $reviewAssignment) {
+                            if (in_array($reviewAssignment->getData('considered'), [2,3])) {
+                                $reviewerNumber++;
+                                $submissionComments = $submissionCommentDao->getReviewerCommentsByReviewerId(
+                                    $templateVars["submission"]->getData('id'),
+                                    $reviewAssignment->getReviewerId(),
+                                    $reviewAssignment->getId(),
+                                    true
+                                );
+                                $reviewerIdentity = $reviewAssignment->getReviewMethod() == ReviewAssignment::SUBMISSION_REVIEW_METHOD_OPEN
+                                    ? $reviewAssignment->getReviewerFullName()
+                                    : __('submission.comments.importPeerReviews.reviewerLetter', ['reviewerLetter' => $reviewerNumber]);
+                                $recommendation = $reviewAssignment->getLocalizedRecommendation();
+                                $commentsBody = '';
+                                /** @var SubmissionComment $comment */
+                                while ($comment = $submissionComments->next()) {
+                                    // If the comment is viewable by the author, then add the comment.
+                                    if ($comment->getViewable()) {
+                                        $commentsBody .= PKPString::stripUnsafeHtml($comment->getComments());
                                     }
+                                }
+                                if ($step->initialTemplateKey == "EDITOR_RECOMMENDATION") {
                                     $comments[] =
                                         '<p>'
                                         . '<strong>' . $reviewerIdentity . '</strong>'
@@ -184,9 +178,15 @@ class CspWorkflowPlugin extends GenericPlugin {
                                         . '</p>'
                                         . $commentsBody;
                                 }
+                                if ($step->initialTemplateKey == "EDITOR_DECISION_RESUBMIT") {
+                                    $comments[] =
+                                    '<p>'
+                                    . '<strong>' . $reviewerIdentity . '</strong>'
+                                    . $commentsBody;
+                                }
                             }
-                            $steps[$stepKey]->variables[$locale][$variableKey]["value"] = join('', $comments);
                         }
+                        $steps[$stepKey]->variables[$locale][$variableKey]["value"] = join('', $comments);
                     }
                 }
             }
