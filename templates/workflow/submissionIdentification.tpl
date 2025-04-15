@@ -11,12 +11,23 @@
 <span class="pkpWorkflow__identificationId">
 	{{ currentPublication.submissionIdCSP }}
 </span>
+
 <span class="pkpWorkflow__identificationDivider">
 	-
 </span>
 <span class="pkpWorkflow__identificationSection">
 	{{ currentPublication.sectioTitle }}
 </span>
+
+<span class="pkpWorkflow__identificationDivider">
+	-
+</span>
+
+<span v-if="currentPublication.codigoFasciculoTematico" class="pkpWorkflow__identificationSection">
+	{translate key="plugins.generic.CspSubmission.codigoFasciculoTematico"}:
+	{{ currentPublication.codigoFasciculoTematico }}
+</span>
+
 <br>
 <span
 	class="pkpWorkflow__identificationTitle"
