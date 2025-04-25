@@ -93,8 +93,6 @@ class CspWorkflowPlugin extends GenericPlugin {
         $params['agradecimentos'] = $request->getUserVar('agradecimentos');
         $params['conflitoInteresse'] = $request->getUserVar('conflitoInteresse');
         $params['consideracoesEticas'] = $request->getUserVar('consideracoesEticas');
-        $params['submissionIdCSP'] = $request->getUserVar('submissionIdCSP');
-        $args[0]->setData('submissionIdCSP', $request->getUserVar('submissionIdCSP'));
         if($args[2]["dateSubmitted"] && $args[2]["dateAccepted"]){
             $params['dateSubmitted'] = $request->getUserVar('dateSubmitted');
             DB::table('edit_decisions')->updateOrInsert(
