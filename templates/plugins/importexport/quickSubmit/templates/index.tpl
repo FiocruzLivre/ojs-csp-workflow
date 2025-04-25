@@ -81,7 +81,7 @@
 			{* Publishing article section *}
 			{if $hasIssues}
 				{fbvFormSection id='articlePublishingSection' list="false"}
-					{fbvElement type="radio" id="articleUnpublished" name="articleStatus" value=0 checked=$articleStatus|compare:false label='plugins.importexport.quickSubmit.unpublished' translate="true"}
+					{* {fbvElement type="radio" id="articleUnpublished" name="articleStatus" value=0 checked=$articleStatus|compare:false label='plugins.importexport.quickSubmit.unpublished' translate="true"} *}
 					{fbvElement type="radio" id="articlePublished" name="articleStatus" value=1 checked=$articleStatus|compare:true label='plugins.importexport.quickSubmit.published' translate="true"}
 
 					{fbvFormSection id='schedulePublicationDiv' list="false"}
