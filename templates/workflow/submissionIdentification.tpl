@@ -12,29 +12,26 @@
 	{{ currentPublication.submissionIdCSP }}
 </span>
 
-<span class="pkpWorkflow__identificationDivider">
-	-
-</span>
-<span class="pkpWorkflow__identificationSection">
-	{{ currentPublication.sectioTitle }}
+<span v-if="currentPublication.sectioTitle" class="pkpWorkflow__identificationSection">
+	<span class="pkpWorkflow__identificationDivider"> - </span>
+	<span class="pkpWorkflow__identificationSection">
+		{{ currentPublication.sectioTitle }}
+	</span>
 </span>
 
 <span v-if="currentPublication.codigoFasciculoTematico" class="pkpWorkflow__identificationSection">
-	<span class="pkpWorkflow__identificationDivider">
-		-
-	</span>
-	{translate key="plugins.generic.CspSubmission.codigoFasciculoTematico"}:
-	{{ currentPublication.codigoFasciculoTematico }}
+	<span class="pkpWorkflow__identificationDivider"> - </span>
+		{translate key="plugins.generic.CspSubmission.codigoFasciculoTematico"}:
+		{{ currentPublication.codigoFasciculoTematico }}
 </span>
 
-<br>
-<span
-	class="pkpWorkflow__identificationTitle"
-	v-html="localizeSubmission(currentPublication.fullTitle, currentPublication.locale)"
->
+<span class="pkpWorkflow__identificationTitle">
+	<br>
+	{{ localizeSubmission(currentPublication.fullTitle, currentPublication.locale) }}
 </span>
-<br>
+
 <span v-if="currentPublication.authorsStringShort" class="pkpWorkflow__identificationAuthor">
+	<br>
 	{{ currentPublication.authorsString }}
 </span>
 
