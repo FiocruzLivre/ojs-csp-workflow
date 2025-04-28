@@ -59,8 +59,6 @@ class CspWorkflowPlugin extends GenericPlugin {
             Hook::add('Submission::Collector', [$this, 'submissionCollector']);
             Hook::add('TemplateManager::display', [$this, 'templateManagerDisplay']);
             Hook::add('Publication::edit', [$this, 'publicationEdit']);
-            Hook::add('Publication::publish::before', [$this, 'PublicationPublishBefore']);
-            Hook::add('quicksubmitform::readuservars', [$this, 'quicksubmitformReaduservars']);
         }
 
         return $success;
@@ -87,14 +85,26 @@ class CspWorkflowPlugin extends GenericPlugin {
     {
         return __('plugins.generic.cspWorkflow.description');
     }
+
+    // Grava campos adicionais ao editar metadados da submissão e ao utilizar plugin de submissão rápida
     public function publicationEdit($hookName, $args){
         $request = Application::get()->getRequest();
         $submission = Repo::submission()->get((int) $args[0]->getData('submissionId'));
-        $params['agradecimentos'] = $request->getUserVar('agradecimentos');
-        $params['conflitoInteresse'] = $request->getUserVar('conflitoInteresse');
-        $params['consideracoesEticas'] = $request->getUserVar('consideracoesEticas');
-        if($args[2]["dateSubmitted"] && $args[2]["dateAccepted"]){
-            $params['dateSubmitted'] = $request->getUserVar('dateSubmitted');
+
+        if ($request->getUserVar('submissionIdCSP')) {
+            $args[1]->setData('submissionIdCSP', $request->getUserVar('submissionIdCSP'));
+        }
+        if ($request->getUserVar('agradecimentos')) {
+            $params['agradecimentos'] = $request->getUserVar('agradecimentos');
+        }
+        if ($request->getUserVar('conflitoInteresse')) {
+            $params['conflitoInteresse'] = $request->getUserVar('conflitoInteresse');
+        }
+        if ($request->getUserVar('consideracoesEticas')) {
+            $params['consideracoesEticas'] = $request->getUserVar('consideracoesEticas');
+        }
+        if($request->getUserVar('dateAccepted')){
+            $params['dateAccepted'] = $request->getUserVar('dateAccepted');
             DB::table('edit_decisions')->updateOrInsert(
                 ['submission_id' => (int) $args[0]->getData('submissionId'),
                 'review_round_id' => null,
@@ -105,9 +115,14 @@ class CspWorkflowPlugin extends GenericPlugin {
                 'date_decided' => $request->getUserVar('dateAccepted')]
             );
         }
-        Repo::submission()->edit($submission, $params);
-
+        if ($request->getUserVar('dateSubmitted')) {
+            $params['dateSubmitted'] = $request->getUserVar('dateSubmitted');
+        }
+        if ($params) {
+            Repo::submission()->edit($submission, $params);
+        }
     }
+
     public function templateManagerDisplay($hookName, $args){
         /* Adiciona CSS específico para remover visualização status do fluxo 
         para usuários que não tenham nenhum dos seguintes papéis:
@@ -633,33 +648,6 @@ class CspWorkflowPlugin extends GenericPlugin {
     public function reviewerActionConfirmReview($hookName, $args) {
         unset($args[2]->to);
     }
-
-    // Lê campos adicionados no formulário do plugin quickSubmission
-	function quicksubmitformReaduservars($hookName, $params){
-		$params[1][] = "dateAccepted";
-		$params[1][] = "dateSubmitted";
-		$params[1][] = "submissionIdCSP";
-	}
-
-    function PublicationPublishBefore($hookName, $params){
-        // Salva conteúdo de campos adicionados no plugin quickSubmission
-        $request = Application::get()->getRequest();
-		$params[0]->setData('submissionIdCSP',$request->getUserVar('submissionIdCSP'));
-        $submission = Repo::submission()->get((int) $params[0]->getData('submissionId'));
-        if($request->getUserVar('dateSubmitted') && $request->getUserVar('dateAccepted')){
-            $params['dateSubmitted'] = $request->getUserVar('dateSubmitted');
-            DB::table('edit_decisions')->updateOrInsert(
-                ['submission_id' => (int) $params[0]->getData('submissionId'),
-                'review_round_id' => null,
-                'stage_id' => 1,
-                'round' => null,
-                'editor_id' => 1,
-                'decision' => Decision::ACCEPT,
-                'date_decided' => $request->getUserVar('dateAccepted')]
-            );
-        }
-        Repo::submission()->edit($submission, $params);
-	}
 
 }
 
