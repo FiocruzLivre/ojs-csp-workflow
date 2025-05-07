@@ -145,6 +145,12 @@ class CspWorkflowPlugin extends GenericPlugin {
                     $url = $request->getBaseUrl() . '/' . $this->getPluginPath() . '/styles/hideStatus.css';
                     $templateMgr = TemplateManager::getManager($request);
                     $templateMgr->addStyleSheet('Author', $url, ['contexts' => 'backend']);
+            }else{
+                // Adiciona filtro "Pré-avaliação" para filtrar submissões que ainda não foram designadas para editoras chefe
+                $components = $args[0]->getState('components');
+                $components["active"]["filters"][0]["filters"][2] = array('param' => 'preAvaliacao', 'value' => true, 'title' => 'Pré-avaliação');
+                $components["myQueue"]["filters"][0]["filters"][2] = array('param' => 'preAvaliacao', 'value' => true, 'title' => 'Pré-avaliação');
+                $args[0]->setState(["components" => $components]);
             }
         }
 
@@ -241,6 +247,16 @@ class CspWorkflowPlugin extends GenericPlugin {
                                 ->where(DB::raw('LOWER(ps.setting_value)'), 'LIKE', $likePattern)->addBinding($keyword)
                         )
                 ));
+        }
+        if ($request->_requestVars["preAvaliacao"][0]) {
+            // Retorna submissões de filtro "Pré-avaliação"
+            $args[0]->whereNotIn('s.submission_progress',['start','review','details','files','editors','contributors']);
+            $args[0]->where('s.stage_id',1);
+            $args[0]->whereNotIn('s.submission_id', fn (Builder $query) => $query
+                ->select('sa.submission_id')
+                ->from('stage_assignments AS sa')
+                ->whereIn('sa.user_group_id', [3])
+                ->distinct());
         }
         // Ordena a lista de submissões em ordem decrescente de data de modificação
         $args[0]->orders[0]["column"] = 's.date_last_activity';
