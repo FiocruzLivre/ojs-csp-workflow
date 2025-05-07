@@ -427,6 +427,14 @@ class CspWorkflowPlugin extends GenericPlugin {
      */
     public function FormConfigAfter($hookName, $args) {
         $context = Application::get()->getRequest()->getContext();
+        // Atribui obrigatoriedade a todos os campos de co-autor
+        if ($args[0]["id"] == 'contributor') {
+            foreach ($args[0]["fields"] as $fields => $value ) {
+                $value["isRequired"] = true;
+                $newFields[] = $value;
+            }
+            $args[0]["fields"] = $newFields;
+        }
         if($args[0]["id"] == "titleAbstract"){
             $publicationId = explode('/',$args[0]["action"]);
             $publicationId = end($publicationId);
