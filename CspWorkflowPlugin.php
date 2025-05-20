@@ -155,7 +155,7 @@ class CspWorkflowPlugin extends GenericPlugin {
         }
 
         // Exibe somente avaliações lidas e encaminhadas em template de email com variável allReviewerComments
-        // Remove recomendação de avaliadores em email de solicitação de modificações ao autor
+        // Remove recomendação de avaliadores em email de solicitação de modificações ao autor e rejeitar submissão
         if($args[1] == "decision/record.tpl"){
             $steps = $args[0]->getState('steps');
             $locale = Locale::getLocale();
@@ -200,12 +200,13 @@ class CspWorkflowPlugin extends GenericPlugin {
                                         . '</p>'
                                         . $commentsBody;
                                 }
-                                if ($step->initialTemplateKey == "EDITOR_DECISION_RESUBMIT") {
+                                if ($step->initialTemplateKey == "EDITOR_DECISION_RESUBMIT" or $step->initialTemplateKey == 'EDITOR_DECISION_DECLINE') {
                                     $comments[] =
                                     '<p>'
                                     . '<strong>' . $reviewerIdentity . '</strong>'
                                     . $commentsBody;
                                 }
+
                             }
                         }
                         $steps[$stepKey]->variables[$locale][$variableKey]["value"] = join('', $comments);
