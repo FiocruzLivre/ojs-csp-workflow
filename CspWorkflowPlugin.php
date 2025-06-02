@@ -422,12 +422,12 @@ class CspWorkflowPlugin extends GenericPlugin {
     }
 
     public function FormConfigAfter($hookName, $args) {
-        $context = Application::get()->getRequest()->getContext();
         $request = Application::get()->getRequest();
+        $context = $request->getContext();
         $router = $request->getRouter();
-        $page = $router->getRequestedPage($request);
+        $handler = $router->getHandler();
         // Atribui obrigatoriedade a todos os campos de co-autor em submissão
-        if ($args[0]["id"] == 'contributor' && $page == 'submission') {
+        if ($args[0]["id"] == 'contributor' && $handler->_id == 'submission') {
             foreach ($args[0]["fields"] as $fields => $value ) {
                 $value["isRequired"] = true;
                 $newFields[] = $value;
