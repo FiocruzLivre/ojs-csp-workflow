@@ -421,15 +421,13 @@ class CspWorkflowPlugin extends GenericPlugin {
         $noteDao->insertObject($note);
     }
 
-
-    /**
-     * Em formulário de "Exigir Nova Rodada de Avaliação",
-     * passa segundo campo selecionado ("Solicitar modificações ao autor que estarão sujeitos a avaliação futura.")
-     */
     public function FormConfigAfter($hookName, $args) {
         $context = Application::get()->getRequest()->getContext();
-        // Atribui obrigatoriedade a todos os campos de co-autor
-        if ($args[0]["id"] == 'contributor') {
+        $request = Application::get()->getRequest();
+        $router = $request->getRouter();
+        $page = $router->getRequestedPage($request);
+        // Atribui obrigatoriedade a todos os campos de co-autor em submissão
+        if ($args[0]["id"] == 'contributor' && $page == 'submission') {
             foreach ($args[0]["fields"] as $fields => $value ) {
                 $value["isRequired"] = true;
                 $newFields[] = $value;
