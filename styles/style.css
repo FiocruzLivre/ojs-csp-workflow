@@ -62,3 +62,9 @@
 .pkp_page_decision.pkp_op_record .app__page--decision .panelSection__header{
 	display: none;
 }
+
+/* Indenta filtro "Aguardando nova versão" criado em sidebar */
+.listPanel__sidebar .pkpFilter:nth-child(4) button{
+	text-indent: 5px;
+	font-size: 90%;
+}

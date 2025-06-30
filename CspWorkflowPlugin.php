@@ -29,7 +29,7 @@ use PKP\components\forms\FieldRadioInput;
 use APP\decision\Decision;
 use PKP\core\PKPString;
 use PKP\submission\reviewAssignment\ReviewAssignment;
-use PKP\mail\traits\ReviewerComments;
+use PKP\submission\reviewRound\ReviewRound;
 
 class CspWorkflowPlugin extends GenericPlugin {
 
@@ -150,6 +150,10 @@ class CspWorkflowPlugin extends GenericPlugin {
                 $components = $args[0]->getState('components');
                 $components["active"]["filters"][0]["filters"][2] = array('param' => 'preAvaliacao', 'value' => true, 'title' => 'Pré-avaliação');
                 $components["myQueue"]["filters"][0]["filters"][2] = array('param' => 'preAvaliacao', 'value' => true, 'title' => 'Pré-avaliação');
+                //Adiciona filtro "Aguardando nova versão" para filtrar submissões que estão aguardando o envio de nova versão do autor
+                $components["active"]["filters"][1]["filters"][2] = array('param' => 'aguardandoNovaVersao', 'value' => true, 'title' => 'Aguadando nova versão');
+                $components["active"]["filters"][1]["filters"][3] = array('param' => 'stageIds', 'value' => 4, 'title' => 'Edição de Texto');
+                $components["active"]["filters"][1]["filters"][4] = array('param' => 'stageIds', 'value' => 5, 'title' => 'Editoração');
                 $args[0]->setState(["components" => $components]);
             }
         }
@@ -258,6 +262,20 @@ class CspWorkflowPlugin extends GenericPlugin {
                 ->from('stage_assignments AS sa')
                 ->whereIn('sa.user_group_id', [3])
                 ->distinct());
+        }
+        // Retorna submissões de filtro "Aguardando nova versão"
+        if ($request->_requestVars["aguardandoNovaVersao"][0]) {
+            $args[0]->leftJoin('review_assignments as raod', 'raod.submission_id', '=', 's.submission_id')
+            ->leftJoin('review_rounds as rr', fn (Builder $table) =>
+                $table->on('rr.submission_id', '=', 's.submission_id')
+                    ->on('raod.review_round_id', '=', 'rr.review_round_id')
+            );
+            // Only get overdue assignments on active review rounds
+            $args[0]->whereIn('rr.status', [
+                ReviewRound::REVIEW_ROUND_STATUS_RESUBMIT_FOR_REVIEW,
+            ]);
+            $args[0]->distinct();
+
         }
         // Ordena a lista de submissões em ordem decrescente de data de modificação
         $args[0]->orders[0]["column"] = 's.date_last_activity';
