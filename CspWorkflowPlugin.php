@@ -325,19 +325,9 @@ class CspWorkflowPlugin extends GenericPlugin {
         /* Em caixa de Adicionar comentário, exibe somente a secretaria como opção de participantes da conversa
         para perfis que não são Gerente, Admin, Editor Chefe ou Assistente de Edição*/
         if($args[1] == "controllers/grid/queries/form/queryForm.tpl"){
-            $userRoles = $request->getUser()->getRoles($request->getContext()->getId());
-            foreach ($userRoles as $roles => $role) {
-                $userRolesArray[] = $role->getData('id');
-            }
-            if(array_intersect(
-                $userRolesArray,
-                [
-                    Role::ROLE_ID_MANAGER,
-                    Role::ROLE_ID_SITE_ADMIN,
-                    Role::ROLE_ID_ASSISTANT,
-                    Role::ROLE_ID_SUB_EDITOR
-                ]
-                ) == null){
+            $request = Application::get()->getRequest();
+            $currentUser = $request->getUser();
+            if(!$currentUser->hasRole([Role::ROLE_ID_MANAGER, Role::ROLE_ID_ASSISTANT, Role::ROLE_ID_SITE_ADMIN, Role::ROLE_ID_SUB_EDITOR], $request->getContext()->getId())){
                 foreach ($templateVars["allParticipants"] as $participant => $value) {
                     $userGroups = Repo::userGroup()
                     ->getCollector()
