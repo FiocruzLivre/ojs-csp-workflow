@@ -30,6 +30,7 @@ use APP\decision\Decision;
 use PKP\core\PKPString;
 use PKP\submission\reviewAssignment\ReviewAssignment;
 use PKP\submission\reviewRound\ReviewRound;
+use DateTime;
 
 class CspWorkflowPlugin extends GenericPlugin {
 
@@ -152,8 +153,11 @@ class CspWorkflowPlugin extends GenericPlugin {
                 $components["myQueue"]["filters"][0]["filters"][2] = array('param' => 'preAvaliacao', 'value' => true, 'title' => 'Pré-avaliação');
                 //Adiciona filtro "Aguardando nova versão" para filtrar submissões que estão aguardando o envio de nova versão do autor
                 $components["active"]["filters"][1]["filters"][2] = array('param' => 'aguardandoNovaVersao', 'value' => true, 'title' => 'Aguadando nova versão');
-                $components["active"]["filters"][1]["filters"][3] = array('param' => 'stageIds', 'value' => 4, 'title' => 'Edição de Texto');
-                $components["active"]["filters"][1]["filters"][4] = array('param' => 'stageIds', 'value' => 5, 'title' => 'Editoração');
+                //Adiciona filtro "Sem resposta avaliador" para filtrar submissões que os avaliadores que não fizeram avaliação e estão em atraso
+                $components["active"]["filters"][1]["filters"][3] = array('param' => 'semAvaliadores', 'value' => true, 'title' => 'Sem resposta avaliador');
+                $components["active"]["filters"][1]["filters"][4] = array('param' => 'stageIds', 'value' => 4, 'title' => 'Edição de Texto');
+                $components["active"]["filters"][1]["filters"][5] = array('param' => 'stageIds', 'value' => 5, 'title' => 'Editoração');
+
                 $args[0]->setState(["components" => $components]);
             }
         }
@@ -275,7 +279,35 @@ class CspWorkflowPlugin extends GenericPlugin {
                 ReviewRound::REVIEW_ROUND_STATUS_RESUBMIT_FOR_REVIEW,
             ]);
             $args[0]->distinct();
-
+        }
+        // Retorna submissões de filtro "Sem resposta avaliadores"
+        if ($request->_requestVars["semAvaliadores"][0]) {
+            $currentTime = new DateTime();
+            $args[0]->leftJoin('review_assignments as raod', 'raod.submission_id', '=', 's.submission_id')
+                ->leftJoin(
+                    'review_rounds as rr',
+                    fn(Builder $table) =>
+                    $table->on('rr.submission_id', '=', 's.submission_id')
+                        ->on('raod.review_round_id', '=', 'rr.review_round_id')
+                )
+                ->where('rr.status', '=', ReviewRound::REVIEW_ROUND_STATUS_REVIEWS_OVERDUE)
+                ->whereNotIn(
+                    's.submission_id',
+                    fn(Builder $query) =>
+                    $query->select('ra.submission_id')
+                        ->from('review_assignments AS ra')
+                        ->where('ra.date_due', '>', $currentTime->format('Y-m-d H:i:s'))
+                        ->distinct()
+                )
+                ->whereNotIn(
+                    's.submission_id',
+                    fn(Builder $query) =>
+                    $query->select('ra2.submission_id')
+                        ->from('review_assignments AS ra2')
+                        ->where('ra2.date_completed', '<>', null)
+                        ->distinct()
+                )
+                ->distinct();
         }
         // Ordena a lista de submissões em ordem decrescente de data de modificação
         $args[0]->orders[0]["column"] = 's.date_last_activity';
