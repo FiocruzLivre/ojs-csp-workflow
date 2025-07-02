@@ -64,7 +64,8 @@
 }
 
 /* Indenta filtro "Aguardando nova versão" criado em sidebar */
-.listPanel__sidebar .pkpFilter:nth-child(4) button{
-	text-indent: 5px;
-	font-size: 90%;
+.listPanel__sidebar .pkpFilter:nth-child(4) button,
+.listPanel__sidebar .pkpFilter:nth-child(5) button{
+	text-indent: 8px;
+	font-size: 88%;
 }
