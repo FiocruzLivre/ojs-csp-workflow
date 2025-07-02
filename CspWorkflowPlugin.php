@@ -125,40 +125,35 @@ class CspWorkflowPlugin extends GenericPlugin {
     }
 
     public function templateManagerDisplay($hookName, $args){
-        /* Adiciona CSS específico para remover visualização status do fluxo 
-        para usuários que não tenham nenhum dos seguintes papéis:
-        Gerente, Editor de seção, Assistente a Admin */
         if($args[1] == "dashboard/index.tpl" or $args[1] == "authorDashboard/authorDashboard.tpl"){
             $request = Application::get()->getRequest();
-            $userRoles = $request->getUser()->getRoles($request->getContext()->getId());
-            foreach ($userRoles as $roles => $role) {
-                $userRolesArray[] = $role->getData('id');
-            }
-            if(array_intersect(
-                $userRolesArray,
-                [
-                    Role::ROLE_ID_MANAGER,
-                    Role::ROLE_ID_SUB_EDITOR,
-                    Role::ROLE_ID_ASSISTANT,
-                    Role::ROLE_ID_SITE_ADMIN
-                ]
-                ) == null){
-                    $url = $request->getBaseUrl() . '/' . $this->getPluginPath() . '/styles/hideStatus.css';
-                    $templateMgr = TemplateManager::getManager($request);
-                    $templateMgr->addStyleSheet('Author', $url, ['contexts' => 'backend']);
-            }else{
+            $currentUser = $request->getUser();
+
+            // Adiciona filtros para usuários com papéis papéis: Gerente, Editor de seção, Assistente a Admin
+            if($currentUser->hasRole([Role::ROLE_ID_MANAGER, Role::ROLE_ID_ASSISTANT, Role::ROLE_ID_SITE_ADMIN, Role::ROLE_ID_SUB_EDITOR], $request->getContext()->getId())){
+
                 // Adiciona filtro "Pré-avaliação" para filtrar submissões que ainda não foram designadas para editoras chefe
                 $components = $args[0]->getState('components');
                 $components["active"]["filters"][0]["filters"][2] = array('param' => 'preAvaliacao', 'value' => true, 'title' => 'Pré-avaliação');
                 $components["myQueue"]["filters"][0]["filters"][2] = array('param' => 'preAvaliacao', 'value' => true, 'title' => 'Pré-avaliação');
+
                 //Adiciona filtro "Aguardando nova versão" para filtrar submissões que estão aguardando o envio de nova versão do autor
-                $components["active"]["filters"][1]["filters"][2] = array('param' => 'aguardandoNovaVersao', 'value' => true, 'title' => 'Aguadando nova versão');
+                $components["active"]["filters"][1]["filters"][2] = array('param' => 'aguardandoNovaVersao', 'value' => true, 'title' => 'Aguard. nova versão');
+                $components["myQueue"]["filters"][1]["filters"][2] = array('param' => 'aguardandoNovaVersao', 'value' => true, 'title' => 'Aguard. nova versão');
+
                 //Adiciona filtro "Sem resposta avaliador" para filtrar submissões que os avaliadores que não fizeram avaliação e estão em atraso
                 $components["active"]["filters"][1]["filters"][3] = array('param' => 'semAvaliadores', 'value' => true, 'title' => 'Sem resposta avaliador');
+                $components["myQueue"]["filters"][1]["filters"][3] = array('param' => 'semAvaliadores', 'value' => true, 'title' => 'Sem resposta avaliador');
                 $components["active"]["filters"][1]["filters"][4] = array('param' => 'stageIds', 'value' => 4, 'title' => 'Edição de Texto');
                 $components["active"]["filters"][1]["filters"][5] = array('param' => 'stageIds', 'value' => 5, 'title' => 'Editoração');
 
                 $args[0]->setState(["components" => $components]);
+            }else{
+                /* Adiciona CSS específico para remover visualização status do fluxo  para usuários que não tenham nenhum
+                dos seguintes papéis: Gerente, Editor de seção, Assistente a Admin */
+                $url = $request->getBaseUrl() . '/' . $this->getPluginPath() . '/styles/hideStatus.css';
+                $templateMgr = TemplateManager::getManager($request);
+                $templateMgr->addStyleSheet('Author', $url, ['contexts' => 'backend']);
             }
         }
 
