@@ -312,6 +312,10 @@ class CspWorkflowPlugin extends GenericPlugin {
     public function templateManagerFetch($hookName, $args) {
         $templateVars = $args[0]->getTemplateVars();
         $request = Application::get()->getRequest();
+        // Altera ordem de exibição da lista de discussões das caixas de discussão
+        if ($args[1] == 'controllers/grid/gridBodyPart.tpl' and $templateVars["grid"]->_id == 'grid-queries-queriesgrid') {
+            rsort($args[0]->tpl_vars["rows"]->value);
+        }
         // Limita a 5 os itens da lista de avaliadores em caixa de Adicionar avaliador
         if($args[1] == "controllers/grid/users/reviewer/form/advancedSearchReviewerForm.tpl"){
             $args[0]
