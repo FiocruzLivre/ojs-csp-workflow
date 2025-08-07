@@ -464,15 +464,6 @@ class CspWorkflowPlugin extends GenericPlugin {
         $request = Application::get()->getRequest();
         $context = $request->getContext();
         $router = $request->getRouter();
-        $handler = $router->getHandler();
-        // Atribui obrigatoriedade a todos os campos de co-autor em submissão
-        if ($args[0]["id"] == 'contributor' && $handler->_id == 'submission') {
-            foreach ($args[0]["fields"] as $fields => $value ) {
-                $value["isRequired"] = true;
-                $newFields[] = $value;
-            }
-            $args[0]["fields"] = $newFields;
-        }
         if($args[0]["id"] == "titleAbstract"){
             $publicationId = explode('/',$args[0]["action"]);
             $publicationId = end($publicationId);
