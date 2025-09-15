@@ -229,7 +229,7 @@ class CspWorkflowPlugin extends GenericPlugin {
     public function submissionCollector($hookName, $args){
         // Inclui campo submissionIdCSP em retorno de busca
         $request = Application::get()->getRequest();
-        if ($request->_requestVars["searchPhrase"] <> "") {
+        if (isset($request->_requestVars["searchPhrase"]) && !empty($request->_requestVars["searchPhrase"])) {
             $keywords = collect(Application::getSubmissionSearchIndex()
                 ->filterKeywords($request->_requestVars["searchPhrase"], true, true, true))
                 ->unique();
@@ -252,7 +252,7 @@ class CspWorkflowPlugin extends GenericPlugin {
                         )
                 ));
         }
-        if ($request->_requestVars["preAvaliacao"][0]) {
+        if (isset($request->_requestVars["preAvaliacao"][0])) {
             // Retorna submissões de filtro "Pré-avaliação"
             $args[0]->whereNotIn('s.submission_progress',['start','review','details','files','editors','contributors']);
             $args[0]->where('s.stage_id',1);
@@ -263,7 +263,7 @@ class CspWorkflowPlugin extends GenericPlugin {
                 ->distinct());
         }
         // Retorna submissões de filtro "Aguardando nova versão"
-        if ($request->_requestVars["aguardandoNovaVersao"][0]) {
+        if (isset($request->_requestVars["aguardandoNovaVersao"][0])) {
             $args[0]->leftJoin('review_assignments as raod', 'raod.submission_id', '=', 's.submission_id')
             ->leftJoin('review_rounds as rr', fn (Builder $table) =>
                 $table->on('rr.submission_id', '=', 's.submission_id')
@@ -276,7 +276,7 @@ class CspWorkflowPlugin extends GenericPlugin {
             $args[0]->distinct();
         }
         // Retorna submissões de filtro "Sem resposta avaliadores"
-        if ($request->_requestVars["semAvaliadores"][0]) {
+        if (isset($request->_requestVars["semAvaliadores"][0])) {
             $currentTime = new DateTime();
             $args[0]->leftJoin('review_assignments as raod', 'raod.submission_id', '=', 's.submission_id')
                 ->leftJoin(
