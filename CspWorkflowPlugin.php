@@ -141,11 +141,16 @@ class CspWorkflowPlugin extends GenericPlugin {
                 $components["active"]["filters"][1]["filters"][2] = array('param' => 'aguardandoNovaVersao', 'value' => true, 'title' => 'Aguard. nova versão');
                 $components["myQueue"]["filters"][1]["filters"][2] = array('param' => 'aguardandoNovaVersao', 'value' => true, 'title' => 'Aguard. nova versão');
 
+                //Adiciona filtro "Fascículo Temático" para filtrar submissões que têm esse campo preenchido
+                $components["active"]["filters"][1]["filters"][3] = array('param' => 'fasciculoTematico', 'value' => true, 'title' => 'Fascículo Temático');
+                $components["myQueue"]["filters"][1]["filters"][3] = array('param' => 'fasciculoTematico', 'value' => true, 'title' => 'Fascículo Temático');
+
                 //Adiciona filtro "Sem resposta avaliador" para filtrar submissões que os avaliadores que não fizeram avaliação e estão em atraso
-                $components["active"]["filters"][1]["filters"][3] = array('param' => 'semAvaliadores', 'value' => true, 'title' => 'Sem resposta avaliador');
-                $components["myQueue"]["filters"][1]["filters"][3] = array('param' => 'semAvaliadores', 'value' => true, 'title' => 'Sem resposta avaliador');
-                $components["active"]["filters"][1]["filters"][4] = array('param' => 'stageIds', 'value' => 4, 'title' => 'Edição de Texto');
-                $components["active"]["filters"][1]["filters"][5] = array('param' => 'stageIds', 'value' => 5, 'title' => 'Editoração');
+                $components["active"]["filters"][1]["filters"][4] = array('param' => 'semAvaliadores', 'value' => true, 'title' => 'Sem resposta avaliador');
+                $components["myQueue"]["filters"][1]["filters"][4] = array('param' => 'semAvaliadores', 'value' => true, 'title' => 'Sem resposta avaliador');
+
+                $components["active"]["filters"][1]["filters"][5] = array('param' => 'stageIds', 'value' => 4, 'title' => 'Edição de Texto');
+                $components["active"]["filters"][1]["filters"][6] = array('param' => 'stageIds', 'value' => 5, 'title' => 'Editoração');
 
                 $args[0]->setState(["components" => $components]);
             }else{
@@ -274,6 +279,14 @@ class CspWorkflowPlugin extends GenericPlugin {
                 ReviewRound::REVIEW_ROUND_STATUS_RESUBMIT_FOR_REVIEW,
             ]);
             $args[0]->distinct();
+        }
+        if (isset($request->_requestVars["fasciculoTematico"][0])) {
+            // Retorna submissões de filtro "Fascículo Temático"
+            $args[0]->whereIn('po.publication_id', fn (Builder $query) => $query
+                ->select('ps.publication_id')
+                ->from('publication_settings AS ps')
+                ->where('ps.setting_name', 'codigoFasciculoTematico')
+                ->distinct());
         }
         // Retorna submissões de filtro "Sem resposta avaliadores"
         if (isset($request->_requestVars["semAvaliadores"][0])) {
