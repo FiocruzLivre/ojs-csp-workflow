@@ -119,6 +119,21 @@ class CspWorkflowPlugin extends GenericPlugin {
         if ($request->getUserVar('dateSubmitted')) {
             $params['dateSubmitted'] = $request->getUserVar('dateSubmitted');
         }
+        // Atribui valores de campo dataAvailabilityOptions (criado na submissão) a campo dataAvailability
+        if ($request->getUserVar('dataAvailabilityOptions')) {
+            $dataAvailability = null;
+            foreach ($request->getUserVar('dataAvailabilityOptions') as $dataAvailabilityOption => $value) {
+                $dataAvailability .= '<br>'.__("plugins.generic.CspSubmission.checkbox.".$value).'<br>';
+            }
+            $primaryLocale = $request->getContext()->getPrimaryLocale();
+            if($primaryLocale <> $args[0]->getData('locale')){
+                $args[0]->setData('dataAvailability',$args[0]->getData('dataAvailability',$args[0]->getData('locale')).'<br>'.$dataAvailability,$primaryLocale);
+                $args[0]->setData('dataAvailability',$args[0]->getData('dataAvailability',$args[0]->getData('locale')).'<br>'.$dataAvailability,$args[0]->getData('locale'));
+            }else{
+                $args[0]->setData('dataAvailability',$args[0]->getData('dataAvailability',$primaryLocale).'<br>'.$dataAvailability,$primaryLocale);
+            }
+        }
+
         if ($params) {
             Repo::submission()->edit($submission, $params);
         }
