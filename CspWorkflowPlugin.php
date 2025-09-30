@@ -133,7 +133,9 @@ class CspWorkflowPlugin extends GenericPlugin {
                 $args[0]->setData('dataAvailability',$args[0]->getData('dataAvailability',$primaryLocale).'<br>'.$dataAvailability,$primaryLocale);
             }
         }
-
+        if ($request->getUserVar('monografDissertTese')) {
+            $params['monografDissertTese'] = $request->getUserVar('monografDissertTese');
+        }
         if ($params) {
             Repo::submission()->edit($submission, $params);
         }
@@ -483,7 +485,7 @@ class CspWorkflowPlugin extends GenericPlugin {
         $note->setAssocId($request->getUserVar('submissionFileId'));
         $noteDao->insertObject($note);
     }
-
+    // Exibe campos criados em aba "Publicação"
     public function FormConfigAfter($hookName, $args) {
         $request = Application::get()->getRequest();
         $context = $request->getContext();
@@ -572,6 +574,22 @@ class CspWorkflowPlugin extends GenericPlugin {
 
             $section = Repo::section()->get((int) $publication->getData('sectionId'));
             $sectionAbbrev = $section->getAbbrev($context->getData('primaryLocale'));
+
+            $args[1]->addField(new FieldText('monografDissertTese', [
+                'label' => __('plugins.generic.CspSubmission.agradecimentos'),
+                'groupId' => 'default',
+                'isRequired' => false,
+                'size' => 'medium'
+            ]),[FIELD_POSITION_AFTER, 'source']);
+            $config = [
+                'name' => 'monografDissertTese',
+                'label' => __('plugins.generic.CspSubmission.monografDissertTese.label'),
+                'component' => 'field-text',
+                'groupId' => 'default',
+                'isRequired' => false,
+                'value' => $submission->getData('monografDissertTese')
+            ];
+            $args[0]["fields"][] = $config;
 
             $args[1]->addField(new FieldTextarea('agradecimentos', [
                 'label' => __('plugins.generic.CspSubmission.agradecimentos'),
