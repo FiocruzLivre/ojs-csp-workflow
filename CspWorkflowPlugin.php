@@ -564,12 +564,25 @@ class CspWorkflowPlugin extends GenericPlugin {
             $section = Repo::section()->get((int) $publication->getData('sectionId'));
             $sectionAbbrev = $section->getAbbrev($context->getData('primaryLocale'));
 
-            $args[1]->addField(new FieldText('monografDissertTese', [
-                'label' => __('plugins.generic.CspSubmission.agradecimentos'),
+            $dataAvailability = $args[0]["fields"][2];
+            $config = [
+                'name' => 'dataAvailabilityRadios',
+                'label' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.label'),
+                'component' => 'field-radio-input',
                 'groupId' => 'default',
-                'isRequired' => false,
-                'size' => 'medium'
-            ]),[FIELD_POSITION_AFTER, 'source']);
+                'isRequired' => true,
+                'options' => [
+                    ['value' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.dadosDisponiveisNoRepo'), 'label' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.dadosDisponiveisNoRepo'),],
+					['value' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.dadosDisponiveisMedianteSolicitacao'), 'label' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.dadosDisponiveisMedianteSolicitacao'),],
+                    ['value' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.fontesIndicadasNoCorpoDoArtigo'), 'label' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.fontesIndicadasNoCorpoDoArtigo'),],
+                    ['value' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.dadosNaoDisponiveis'), 'label' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.dadosNaoDisponiveis'),],
+                    ['value' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.naoSeAplica'), 'label' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.naoSeAplica'),],
+                ],
+                'value' => $publication->getLocalizedData('dataAvailabilityRadios')
+            ];
+            $args[0]["fields"][2] = $config;
+            $args[0]["fields"][] = $dataAvailability;
+
             $config = [
                 'name' => 'monografDissertTese',
                 'label' => __('plugins.generic.CspSubmission.monografDissertTese.label'),
@@ -581,30 +594,6 @@ class CspWorkflowPlugin extends GenericPlugin {
             $args[0]["fields"][] = $config;
 
             $config = [
-                'name' => 'dataAvailabilityRadios',
-                'label' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.label'),
-                'component' => 'field-radio-input',
-                'groupId' => 'default',
-                'isRequired' => true,
-                'FIELD_POSITION_BEFORE' => 'dataAvailability',
-                'options' => [
-                    ['value' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.dadosDisponiveisNoRepo'), 'label' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.dadosDisponiveisNoRepo'),],
-					['value' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.dadosDisponiveisMedianteSolicitacao'), 'label' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.dadosDisponiveisMedianteSolicitacao'),],
-                    ['value' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.fontesIndicadasNoCorpoDoArtigo'), 'label' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.fontesIndicadasNoCorpoDoArtigo'),],
-                    ['value' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.dadosNaoDisponiveis'), 'label' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.dadosNaoDisponiveis'),],
-                    ['value' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.naoSeAplica'), 'label' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.naoSeAplica'),],
-                ],
-                'value' => $publication->getLocalizedData('dataAvailabilityRadios')
-            ];
-            $args[0]["fields"][] = $config;
-
-            $args[1]->addField(new FieldTextarea('agradecimentos', [
-                'label' => __('plugins.generic.CspSubmission.agradecimentos'),
-                'groupId' => 'default',
-                'isRequired' => false,
-                'size' => 'medium'
-            ]));
-            $config = [
                 'name' => 'agradecimentos',
                 'label' => __('plugins.generic.CspSubmission.agradecimentos'),
                 'component' => 'field-textarea',
@@ -615,13 +604,6 @@ class CspWorkflowPlugin extends GenericPlugin {
             $args[0]["fields"][] = $config;
 
             if($sectionAbbrev == "ESP_TEMATICO") {
-                $args[1]->addField(new FieldText('espacoTematico', [
-                    'label' => __('plugins.generic.CspSubmission.espacoTematico'),
-                    'groupId' => 'default',
-                    'isRequired' => true,
-                    'size' => 'medium',
-                    'value' => $context->getData('espacoTematico'),
-                ]));
                 $config = [
                     'name' => 'espacoTematico',
                     'label' => __('plugins.generic.CspSubmission.espacoTematico'),
@@ -634,13 +616,6 @@ class CspWorkflowPlugin extends GenericPlugin {
             }
 
             if($sectionAbbrev == "COMENTARIOS") {
-                $args[1]->addField(new FieldText('codigoArtigoRelacionado', [
-                    'label' => __('plugins.generic.CspSubmission.codigoArtigoRelacionado'),
-                    'groupId' => 'default',
-                    'isRequired' => true,
-                    'size' => 'small',
-                    'value' => $context->getData('codigoArtigoRelacionado'),
-                ]));
                 $config = [
                     'name' => 'codigoArtigoRelacionado',
                     'label' => __('plugins.generic.CspSubmission.codigoArtigoRelacionado'),
@@ -652,14 +627,6 @@ class CspWorkflowPlugin extends GenericPlugin {
                 $args[0]["fields"][] = $config;
             }
 
-            $args[1]->addField(new FieldText('codigoFasciculoTematico', [
-                'label' => __('plugins.generic.CspSubmission.codigoFasciculoTematico'),
-                'description' => __('plugins.generic.CspSubmission.codigoFasciculoTematico.description'),
-                'groupId' => 'default',
-                'isRequired' => false,
-                'size' => 'medium',
-                'value' => $context->getData('codigoFasciculoTematico'),
-            ]));
             $config = [
                 'name' => 'codigoFasciculoTematico',
                 'label' => __('plugins.generic.CspSubmission.codigoFasciculoTematico'),
@@ -670,18 +637,6 @@ class CspWorkflowPlugin extends GenericPlugin {
             ];
             $args[0]["fields"][] = $config;
 
-            $args[1]->addField(new FieldRadioInput('conflitoInteresse', [
-                'label' => __('plugins.generic.CspSubmission.conflitoInteresse'),
-                'groupId' => 'default',
-                'isRequired' => true,
-                'type' => 'radio',
-                'size' => 'small',
-                'options' => [
-                    ['value' => 'S', 'label' => __('common.yes')],
-                    ['value' => 'N', 'label' => __('common.no')],
-                ],
-                'value' => $context->getData('conflitoInteresse'),
-            ]));
             $config = [
                 'name' => 'conflitoInteresse',
                 'label' => __('plugins.generic.CspSubmission.conflitoInteresse'),
@@ -696,18 +651,6 @@ class CspWorkflowPlugin extends GenericPlugin {
             ];
             $args[0]["fields"][] = $config;
 
-            $args[1]->addField(new FieldRadioInput('consideracoesEticas', [
-                'label' => __('plugins.generic.CspSubmission.consideracoesEticas'),
-                'groupId' => 'default',
-                'isRequired' => true,
-                'type' => 'radio',
-                'size' => 'small',
-                'options' => [
-                    ['value' => 'S', 'label' => __('plugins.generic.CspSubmission.consideracoesEticas.checkbox.yes')],
-                    ['value' => 'N', 'label' => __('plugins.generic.CspSubmission.consideracoesEticas.checkbox.no')],
-                ],
-                'value' => $context->getData('consideracoesEticas'),
-            ]));
             $config = [
                 'name' => 'consideracoesEticas',
                 'label' => __('plugins.generic.CspSubmission.consideracoesEticas'),
