@@ -116,22 +116,11 @@ class CspWorkflowPlugin extends GenericPlugin {
                 'date_decided' => $request->getUserVar('dateAccepted')]
             );
         }
+        if ($request->getUserVar('dataAvailabilityRadios')) {
+            $params['dataAvailabilityRadios'] = $request->getUserVar('dataAvailabilityRadios');
+        }
         if ($request->getUserVar('dateSubmitted')) {
             $params['dateSubmitted'] = $request->getUserVar('dateSubmitted');
-        }
-        // Atribui valores de campo dataAvailabilityOptions (criado na submissão) a campo dataAvailability
-        if ($request->getUserVar('dataAvailabilityOptions')) {
-            $dataAvailability = null;
-            foreach ($request->getUserVar('dataAvailabilityOptions') as $dataAvailabilityOption => $value) {
-                $dataAvailability .= '<br>'.__("plugins.generic.CspSubmission.checkbox.".$value).'<br>';
-            }
-            $primaryLocale = $request->getContext()->getPrimaryLocale();
-            if($primaryLocale <> $args[0]->getData('locale')){
-                $args[0]->setData('dataAvailability',$args[0]->getData('dataAvailability',$args[0]->getData('locale')).'<br>'.$dataAvailability,$primaryLocale);
-                $args[0]->setData('dataAvailability',$args[0]->getData('dataAvailability',$args[0]->getData('locale')).'<br>'.$dataAvailability,$args[0]->getData('locale'));
-            }else{
-                $args[0]->setData('dataAvailability',$args[0]->getData('dataAvailability',$primaryLocale).'<br>'.$dataAvailability,$primaryLocale);
-            }
         }
         if ($request->getUserVar('monografDissertTese')) {
             $params['monografDissertTese'] = $request->getUserVar('monografDissertTese');
@@ -588,6 +577,24 @@ class CspWorkflowPlugin extends GenericPlugin {
                 'groupId' => 'default',
                 'isRequired' => false,
                 'value' => $submission->getData('monografDissertTese')
+            ];
+            $args[0]["fields"][] = $config;
+
+            $config = [
+                'name' => 'dataAvailabilityRadios',
+                'label' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.label'),
+                'component' => 'field-radio-input',
+                'groupId' => 'default',
+                'isRequired' => true,
+                'FIELD_POSITION_BEFORE' => 'dataAvailability',
+                'options' => [
+                    ['value' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.dadosDisponiveisNoRepo'), 'label' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.dadosDisponiveisNoRepo'),],
+					['value' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.dadosDisponiveisMedianteSolicitacao'), 'label' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.dadosDisponiveisMedianteSolicitacao'),],
+                    ['value' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.fontesIndicadasNoCorpoDoArtigo'), 'label' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.fontesIndicadasNoCorpoDoArtigo'),],
+                    ['value' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.dadosNaoDisponiveis'), 'label' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.dadosNaoDisponiveis'),],
+                    ['value' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.naoSeAplica'), 'label' => __('plugins.generic.CspSubmission.dataAvailabilityRadios.naoSeAplica'),],
+                ],
+                'value' => $publication->getLocalizedData('dataAvailabilityRadios')
             ];
             $args[0]["fields"][] = $config;
 
