@@ -31,6 +31,7 @@ use PKP\core\PKPString;
 use PKP\submission\reviewAssignment\ReviewAssignment;
 use PKP\submission\reviewRound\ReviewRound;
 use DateTime;
+use PKP\reviewForm\ReviewFormResponseDAO;
 
 class CspWorkflowPlugin extends GenericPlugin {
 
@@ -193,11 +194,27 @@ class CspWorkflowPlugin extends GenericPlugin {
                                     $reviewAssignment->getId(),
                                     true
                                 );
+
                                 $reviewerIdentity = $reviewAssignment->getReviewMethod() == ReviewAssignment::SUBMISSION_REVIEW_METHOD_OPEN
                                     ? $reviewAssignment->getReviewerFullName()
                                     : __('submission.comments.importPeerReviews.reviewerLetter', ['reviewerLetter' => $reviewerNumber]);
                                 $recommendation = $reviewAssignment->getLocalizedRecommendation();
+
                                 $commentsBody = '';
+
+                                // Em caso de existência de formulário de avaliação, exibe conteúdo de campo "para autor e editor"
+                                $reviewFormResponseDao = DAORegistry::getDAO('ReviewFormResponseDAO');
+                                $result = $reviewFormResponseDao->retrieve(
+                                    ' SELECT review_form_element_id FROM ojs.review_form_element_settings WHERE setting_value LIKE ?',
+                                    ['%para autor e editor%']
+                                );
+                                $row = $result->current();
+                                $formParaAtuorEditor = $reviewFormResponseDao->getReviewFormResponse($reviewAssignment->getId(), $row->review_form_element_id);
+
+                                if($formParaAtuorEditor){
+                                    $commentsBody .= '<br><br>'. PKPString::stripUnsafeHtml($formParaAtuorEditor->getData('value'));
+                                }
+
                                 /** @var SubmissionComment $comment */
                                 while ($comment = $submissionComments->next()) {
                                     // If the comment is viewable by the author, then add the comment.

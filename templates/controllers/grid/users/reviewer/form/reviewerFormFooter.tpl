@@ -61,9 +61,12 @@
 		{/foreach}
 	{/fbvFormSection}
 
+	<!-- Atribui o primeiro item ao campo de seleção para que campo não passe vazio em caso de editor esquecer de selecionar -->
 	{if count($reviewForms)>0}
-		{fbvFormSection title="submission.reviewForm"}
-			{fbvElement type="select" name="reviewFormId" id="reviewFormId" defaultLabel="manager.reviewForms.noneChosen"|translate defaultValue="0" translate=false from=$reviewForms selected=$reviewFormId}
+		{assign var=keys value=$reviewForms|@array_keys}
+		{assign var=primeiraChave value=$keys[0]}
+		{fbvFormSection title="submission.reviewForm" required=true}
+			{fbvElement type="select" required=true name="reviewFormId" id="reviewFormId" defaultLabel="manager.reviewForms.noneChosen"|translate defaultValue="0" translate=false from=$reviewForms selected=$primeiraChave}
 		{/fbvFormSection}
 	{/if}
 
