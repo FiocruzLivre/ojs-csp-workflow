@@ -340,9 +340,12 @@ class CspWorkflowPlugin extends GenericPlugin {
                 )
                 ->distinct();
         }
-        // Ordena a lista de submissões em ordem decrescente de data de modificação
-        $args[0]->orders[0]["column"] = 's.date_last_activity';
-        $args[1]->orderBy = 'dateLastActivity';
+        // Ordena a lista de submissões do dashboard em ordem decrescente de data de modificação
+        $requestPath = ltrim((string) $request->getRequestPath(), '/');
+        if (in_array($requestPath, ["ojs/index.php/csp/api/v1/_submissions","ojs/index.php/csp/submissions"])) {
+            $args[0]->orders[0]["column"] = 's.date_last_activity';
+            $args[1]->orderBy = 'dateLastActivity';
+        }
     }
 
     public function templateManagerFetch($hookName, $args) {
