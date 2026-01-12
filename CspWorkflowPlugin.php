@@ -576,6 +576,7 @@ class CspWorkflowPlugin extends GenericPlugin {
             $config["fields"][0]["value"] = $fieldDecision->options[1]["value"];
         }
         if($args[1]->id == "metadata"){
+
             $publicationId = explode('/',$args[0]["action"]);
             $publicationId = end($publicationId);
             $publication = Repo::publication()->get((int)$publicationId);
@@ -684,6 +685,56 @@ class CspWorkflowPlugin extends GenericPlugin {
                 'value' => $submission->getLocalizedData('consideracoesEticas')
             ];
             $args[0]["fields"][] = $config;
+
+            // Exibe avaliadores que responderam "Sim" a seguint pergunta do formulário de avaliação:
+            // "Caso este manuscrito seja aprovado em CSP, você aceitaria que seu nome fosse divulgado na publicação?"
+            $reviewFormResponseDao = DAORegistry::getDAO('ReviewFormResponseDAO'); /** @var ReviewFormResponseDAO $reviewFormResponseDao */
+            $result = $reviewFormResponseDao->retrieve(
+                'SELECT DISTINCT ra.reviewer_id
+                    FROM review_form_responses r
+                    JOIN review_assignments ra ON r.review_id = ra.review_id
+                    JOIN review_form_elements e ON r.review_form_element_id = e.review_form_element_id
+                    WHERE e.review_form_id = ?
+                    AND r.review_form_element_id = ?
+                    AND r.response_value = ?
+                    AND ra.submission_id = ?',
+                [1, 1, '0', $submission->getId()]
+            );
+
+            $reviewerNames = [];
+            if ($result) {
+                while ($row = $result->current()) {
+                    $reviewerId = $row->reviewer_id ?? null;
+                    if ($reviewerId) {
+                        $user = Repo::user()->get((int) $reviewerId);
+                        if ($user) {
+                            $name = $user->getFullName();
+                        } else {
+                            $name = __('common.unknown');
+                        }
+                        $reviewerNames[] = $name;
+                    }
+                    $result->next();
+                }
+            }
+
+            if (!empty($reviewerNames)) {
+                $plain = implode('; ', array_map('strval', $reviewerNames));
+                $args[1]->addField(new FieldText('reviewersNamePublish', [
+                    'label' => __('plugins.generic.cspWorkflow.reviewersNamePublish'),
+                    'groupId' => 'default',
+                    'isRequired' => false
+                ]));
+
+                $args[0]["fields"][] = [
+                    'name' => 'reviewersNamePublish',
+                    'label' => __('plugins.generic.cspWorkflow.reviewersNamePublish'),
+                    'component' => 'field-text',
+                    'groupId' => 'default',
+                    'size' => 'large',
+                    'value' => $plain
+                ];
+            }
         }
     }
 

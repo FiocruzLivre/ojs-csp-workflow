@@ -20,3 +20,6 @@ msgstr "ID do Sagas"
 
 msgid "plugins.generic.cspWorkflow.dates.description"
 msgstr "<b>Atenção!!</b> A alteração do ano da data de submissão irá ocasionar inconsistência na geração do Id do CSP</b>"
+
+msgid "plugins.generic.cspWorkflow.reviewersNamePublish"
+msgstr "Avaliadores que permitem divulgar seu nome"
