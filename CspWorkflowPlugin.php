@@ -204,13 +204,18 @@ class CspWorkflowPlugin extends GenericPlugin {
 
                                 // Em caso de existência de formulário de avaliação, exibe conteúdo de campo "para autor e editor"
                                 $reviewFormResponseDao = DAORegistry::getDAO('ReviewFormResponseDAO');
-                                $result = $reviewFormResponseDao->retrieve(
-                                    ' SELECT review_form_element_id FROM ojs.review_form_element_settings WHERE setting_value LIKE ?',
-                                    ['%para autor e editor%']
-                                );
-                                $row = $result->current();
-                                $formParaAtuorEditor = $reviewFormResponseDao->getReviewFormResponse($reviewAssignment->getId(), $row->review_form_element_id);
+                                $formParaAtuorEditor = null;
+                                $row = DB::table('review_form_element_settings as rfes')
+                                    ->join('review_form_elements as rfe', 'rfes.review_form_element_id', '=', 'rfe.review_form_element_id')
+                                    ->join('review_forms as rf', 'rfe.review_form_id', '=', 'rf.review_form_id')
+                                    ->where('rfes.setting_value', 'LIKE', '%para autor e editor%')
+                                    ->where('rf.is_active', 1) // Apenas formulários ativos
+                                    ->select('rfes.review_form_element_id')
+                                    ->first();
 
+                                if ($row && isset($row->review_form_element_id)) {
+                                    $formParaAtuorEditor = $reviewFormResponseDao->getReviewFormResponse($reviewAssignment->getId(), $row->review_form_element_id);
+                                }
                                 if($formParaAtuorEditor){
                                     $commentsBody .= '<br><br>'. PKPString::stripUnsafeHtml($formParaAtuorEditor->getData('value'));
                                 }
@@ -688,33 +693,26 @@ class CspWorkflowPlugin extends GenericPlugin {
 
             // Exibe avaliadores que responderam "Sim" a seguint pergunta do formulário de avaliação:
             // "Caso este manuscrito seja aprovado em CSP, você aceitaria que seu nome fosse divulgado na publicação?"
-            $reviewFormResponseDao = DAORegistry::getDAO('ReviewFormResponseDAO'); /** @var ReviewFormResponseDAO $reviewFormResponseDao */
-            $result = $reviewFormResponseDao->retrieve(
-                'SELECT DISTINCT ra.reviewer_id
-                    FROM review_form_responses r
-                    JOIN review_assignments ra ON r.review_id = ra.review_id
-                    JOIN review_form_elements e ON r.review_form_element_id = e.review_form_element_id
-                    WHERE e.review_form_id = ?
-                    AND r.review_form_element_id = ?
-                    AND r.response_value = ?
-                    AND ra.submission_id = ?',
-                [1, 1, '0', $submission->getId()]
-            );
-
             $reviewerNames = [];
-            if ($result) {
-                while ($row = $result->current()) {
-                    $reviewerId = $row->reviewer_id ?? null;
-                    if ($reviewerId) {
-                        $user = Repo::user()->get((int) $reviewerId);
-                        if ($user) {
-                            $name = $user->getFullName();
-                        } else {
-                            $name = __('common.unknown');
-                        }
-                        $reviewerNames[] = $name;
+            $reviewerIds = DB::table('review_form_responses as r')
+                ->join('review_assignments as ra', 'r.review_id', '=', 'ra.review_id')
+                ->join('review_form_elements as e', 'r.review_form_element_id', '=', 'e.review_form_element_id')
+                ->where('e.review_form_id', 1)
+                ->where('e.element_type', 5) // Seleciona respostas a Radio button
+                ->where('r.response_value', '0') // Resposta "Sim" (0 = Sim, 1 = Não)
+                ->where('ra.submission_id', $submission->getId())
+                ->distinct()
+                ->pluck('ra.reviewer_id');
+
+            foreach ($reviewerIds as $reviewerId) {
+                if ($reviewerId) {
+                    $user = Repo::user()->get((int) $reviewerId);
+                    if ($user) {
+                        $name = $user->getFullName();
+                    } else {
+                        $name = __('common.unknown');
                     }
-                    $result->next();
+                    $reviewerNames[] = $name;
                 }
             }
 
