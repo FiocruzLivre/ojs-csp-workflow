@@ -23,3 +23,15 @@ msgstr "<b>Atenção!!</b> A alteração do ano da data de submissão irá ocasi
 
 msgid "plugins.generic.cspWorkflow.reviewersNamePublish"
 msgstr "Avaliadores que permitem divulgar seu nome"
+
+msgid "plugins.generic.cspWorkflow.roundStatus.reviewOverdue"
+msgstr "Avaliador em atraso"
+
+msgid "plugins.generic.cspWorkflow.roundStatus.resubmitForReview"
+msgstr "Aguard. nova versão"
+
+msgid "plugins.generic.cspWorkflow.pre-review"
+msgstr "Pré-avaliação"
+
+msgid "plugins.generic.cspWorkflow.thematic"
+msgstr "Fascículo Temático"

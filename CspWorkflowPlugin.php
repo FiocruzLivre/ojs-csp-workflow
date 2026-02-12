@@ -141,23 +141,23 @@ class CspWorkflowPlugin extends GenericPlugin {
 
                 // Adiciona filtro "Pré-avaliação" para filtrar submissões que ainda não foram designadas para editoras chefe
                 $components = $args[0]->getState('components');
-                $components["active"]["filters"][0]["filters"][2] = array('param' => 'preAvaliacao', 'value' => true, 'title' => 'Pré-avaliação');
-                $components["myQueue"]["filters"][0]["filters"][2] = array('param' => 'preAvaliacao', 'value' => true, 'title' => 'Pré-avaliação');
+                $components["active"]["filters"][0]["filters"][2] = array('param' => 'preAvaliacao', 'value' => true, 'title' => __('plugins.generic.cspWorkflow.pre-review'));
+                $components["myQueue"]["filters"][0]["filters"][2] = array('param' => 'preAvaliacao', 'value' => true, 'title' => __('plugins.generic.cspWorkflow.pre-review'));
 
                 //Adiciona filtro "Aguardando nova versão" para filtrar submissões que estão aguardando o envio de nova versão do autor
-                $components["active"]["filters"][1]["filters"][2] = array('param' => 'aguardandoNovaVersao', 'value' => true, 'title' => 'Aguard. nova versão');
-                $components["myQueue"]["filters"][1]["filters"][2] = array('param' => 'aguardandoNovaVersao', 'value' => true, 'title' => 'Aguard. nova versão');
+                $components["active"]["filters"][1]["filters"][2] = array('param' => 'aguardandoNovaVersao', 'value' => true, 'title' => __('plugins.generic.cspWorkflow.roundStatus.resubmitForReview'),);
+                $components["myQueue"]["filters"][1]["filters"][2] = array('param' => 'aguardandoNovaVersao', 'value' => true, 'title' => __('plugins.generic.cspWorkflow.roundStatus.resubmitForReview'),);
 
                 //Adiciona filtro "Fascículo Temático" para filtrar submissões que têm esse campo preenchido
-                $components["active"]["filters"][1]["filters"][3] = array('param' => 'fasciculoTematico', 'value' => true, 'title' => 'Fascículo Temático');
-                $components["myQueue"]["filters"][1]["filters"][3] = array('param' => 'fasciculoTematico', 'value' => true, 'title' => 'Fascículo Temático');
+                $components["active"]["filters"][1]["filters"][3] = array('param' => 'fasciculoTematico', 'value' => true, 'title' => __('plugins.generic.cspWorkflow.thematic'));
+                $components["myQueue"]["filters"][1]["filters"][3] = array('param' => 'fasciculoTematico', 'value' => true, 'title' => __('plugins.generic.cspWorkflow.thematic'));
 
                 //Adiciona filtro "Sem resposta avaliador" para filtrar submissões que os avaliadores que não fizeram avaliação e estão em atraso
-                $components["active"]["filters"][1]["filters"][4] = array('param' => 'semAvaliadores', 'value' => true, 'title' => 'Sem resposta avaliador');
-                $components["myQueue"]["filters"][1]["filters"][4] = array('param' => 'semAvaliadores', 'value' => true, 'title' => 'Sem resposta avaliador');
+                $components["active"]["filters"][1]["filters"][4] = array('param' => 'semAvaliadores', 'value' => true, 'title' => __('plugins.generic.cspWorkflow.roundStatus.reviewOverdue'));
+                $components["myQueue"]["filters"][1]["filters"][4] = array('param' => 'semAvaliadores', 'value' => true, 'title' => __('plugins.generic.cspWorkflow.roundStatus.reviewOverdue'));
 
-                $components["active"]["filters"][1]["filters"][5] = array('param' => 'stageIds', 'value' => 4, 'title' => 'Edição de Texto');
-                $components["active"]["filters"][1]["filters"][6] = array('param' => 'stageIds', 'value' => 5, 'title' => 'Editoração');
+                $components["active"]["filters"][1]["filters"][5] = array('param' => 'stageIds', 'value' => 4, 'title' => __('submission.copyediting'));
+                $components["active"]["filters"][1]["filters"][6] = array('param' => 'stageIds', 'value' => 5, 'title' => __('manager.publication.productionStage'));
 
                 $args[0]->setState(["components" => $components]);
             }else{
