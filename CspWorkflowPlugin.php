@@ -205,12 +205,16 @@ class CspWorkflowPlugin extends GenericPlugin {
                                 // Em caso de existência de formulário de avaliação, exibe conteúdo de campo "para autor e editor"
                                 $reviewFormResponseDao = DAORegistry::getDAO('ReviewFormResponseDAO');
                                 $formParaAtuorEditor = null;
-                                $row = DB::table('review_form_element_settings as rfes')
-                                    ->join('review_form_elements as rfe', 'rfes.review_form_element_id', '=', 'rfe.review_form_element_id')
-                                    ->join('review_forms as rf', 'rfe.review_form_id', '=', 'rf.review_form_id')
+                                $row = DB::table('review_assignments as ra')
+                                    ->join('review_form_elements as rfe', 'rfe.review_form_id', '=', 'ra.review_form_id')
+                                    ->join('review_form_element_settings as rfes', 'rfes.review_form_element_id', '=', 'rfe.review_form_element_id')
                                     ->where('rfes.setting_value', 'LIKE', '%para autor e editor%')
-                                    ->where('rf.is_active', 1) // Apenas formulários ativos
-                                    ->select('rfes.review_form_element_id')
+                                    ->where('ra.submission_id', $reviewAssignment->getData('submissionId'))
+                                    ->where('ra.reviewer_id', $reviewAssignment->_data["reviewerId"])
+                                    ->where('ra.review_form_id', $reviewAssignment->_data["reviewFormId"])
+                                    ->where('ra.review_round_id', $reviewAssignment->_data["reviewRoundId"])
+                                    ->where('ra.round', $reviewAssignment->_data["round"])
+                                    ->select('rfe.review_form_element_id')
                                     ->first();
 
                                 if ($row && isset($row->review_form_element_id)) {
@@ -697,7 +701,6 @@ class CspWorkflowPlugin extends GenericPlugin {
             $reviewerIds = DB::table('review_form_responses as r')
                 ->join('review_assignments as ra', 'r.review_id', '=', 'ra.review_id')
                 ->join('review_form_elements as e', 'r.review_form_element_id', '=', 'e.review_form_element_id')
-                ->where('e.review_form_id', 1)
                 ->where('e.element_type', 5) // Seleciona respostas a Radio button
                 ->where('r.response_value', '0') // Resposta "Sim" (0 = Sim, 1 = Não)
                 ->where('ra.submission_id', $submission->getId())
