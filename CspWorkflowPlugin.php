@@ -99,7 +99,9 @@ class CspWorkflowPlugin extends GenericPlugin {
         if ($request->getUserVar('agradecimentos')) {
             $params['agradecimentos'] = $request->getUserVar('agradecimentos');
         }
-        if ($request->getUserVar('conflitoInteresse')) {
+        if ($request->getUserVar('conflitoInteresseOption') === 'N') {
+            $params['conflitoInteresse'] = 'N';
+        } elseif ($request->getUserVar('conflitoInteresse')) {
             $params['conflitoInteresse'] = $request->getUserVar('conflitoInteresse');
         }
         if ($request->getUserVar('consideracoesEticas')) {
@@ -667,17 +669,31 @@ class CspWorkflowPlugin extends GenericPlugin {
             ];
             $args[0]["fields"][] = $config;
 
+            $conflitoInteresse = $submission->getData('conflitoInteresse');
+            $conflitoInteresseOption = ($conflitoInteresse === null || $conflitoInteresse === '')
+                ? '' : ($conflitoInteresse === 'N' ? 'N' : 'S');
             $config = [
-                'name' => 'conflitoInteresse',
+                'name' => 'conflitoInteresseOption',
                 'label' => __('plugins.generic.CspSubmission.conflitoInteresse'),
-                'component' => 'field-radio-input',
+                'component' => 'field-options',
                 'groupId' => 'default',
                 'isRequired' => true,
+                'type' => 'radio',
                 'options' => [
                     ['value' => 'S', 'label' => __('common.yes')],
                     ['value' => 'N', 'label' => __('common.no')],
                 ],
-                'value' => $submission->getLocalizedData('conflitoInteresse')
+                'value' => $conflitoInteresseOption,
+            ];
+            $args[0]["fields"][] = $config;
+            $config = [
+                'name' => 'conflitoInteresse',
+                'label' => __('plugins.generic.CspSubmission.conflitoInteresseTexto'),
+                'component' => 'field-textarea',
+                'groupId' => 'default',
+                'isRequired' => true,
+                'showWhen' => ['conflitoInteresseOption', 'S'],
+                'value' => ($conflitoInteresseOption === 'S' ? $conflitoInteresse : ''),
             ];
             $args[0]["fields"][] = $config;
 
