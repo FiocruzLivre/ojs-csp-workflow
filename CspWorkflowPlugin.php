@@ -691,7 +691,6 @@ class CspWorkflowPlugin extends GenericPlugin {
                 'label' => __('plugins.generic.CspSubmission.conflitoInteresseTexto'),
                 'component' => 'field-textarea',
                 'groupId' => 'default',
-                'isRequired' => true,
                 'showWhen' => ['conflitoInteresseOption', 'S'],
                 'value' => ($conflitoInteresseOption === 'S' ? $conflitoInteresse : ''),
             ];
