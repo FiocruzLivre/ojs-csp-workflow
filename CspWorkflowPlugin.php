@@ -617,7 +617,8 @@ class CspWorkflowPlugin extends GenericPlugin {
 
             $config = [
                 'name' => 'monografDissertTese',
-                'label' => __('plugins.generic.CspSubmission.monografDissertTese.label'),
+                'label' => __('plugins.generic.CspSubmission.monografDissertTese.options'),
+                'description' => __('plugins.generic.CspSubmission.monografDissertTese.repo'),
                 'component' => 'field-text',
                 'groupId' => 'default',
                 'isRequired' => false,
