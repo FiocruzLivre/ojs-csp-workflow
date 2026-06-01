@@ -419,7 +419,7 @@ class CspWorkflowPlugin extends GenericPlugin {
                  * Em lista (grid) de arquivos,
                  * substitui tipo do arquivo por comentário sobre o arquivo e adiciona nome de pessoa que incluiu o arquivo
                  */
-                if(substr($templateVars["grid"]->_id,0,10) == "grid-files"){
+                if(substr($templateVars["grid"]->_id,0,10) == "grid-files" && is_array($templateVars["row"]->_data)){
                     $args[0]->tpl_vars["columns"]->value['notes'] = new GridColumn('notes', 'common.note');
                     $noteDao = DAORegistry::getDAO('NoteDAO'); /** @var NoteDAO $noteDao */
                     $notes = $noteDao->getByAssoc(Application::ASSOC_TYPE_SUBMISSION_FILE, $args[0]->tpl_vars["row"]->value->_id)->toArray();;
