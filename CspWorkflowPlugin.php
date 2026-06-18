@@ -107,6 +107,11 @@ class CspWorkflowPlugin extends GenericPlugin {
         if ($request->getUserVar('consideracoesEticas')) {
             $params['consideracoesEticas'] = $request->getUserVar('consideracoesEticas');
         }
+        if ($request->getUserVar('usoIAOption') === 'N') {
+            $params['usoIA'] = 'N';
+        } elseif ($request->getUserVar('usoIA')) {
+            $params['usoIA'] = $request->getUserVar('usoIA');
+        }
         if($request->getUserVar('dateAccepted')){
             $params['dateAccepted'] = $request->getUserVar('dateAccepted');
             DB::table('edit_decisions')->updateOrInsert(
@@ -708,6 +713,32 @@ class CspWorkflowPlugin extends GenericPlugin {
                     ['value' => 'N', 'label' => __('plugins.generic.CspSubmission.consideracoesEticas.checkbox.no')],
                 ],
                 'value' => $submission->getLocalizedData('consideracoesEticas')
+            ];
+            $args[0]["fields"][] = $config;
+
+            $usoIA = $submission->getData('usoIA');
+            $usoIAOption = ($usoIA === null || $usoIA === '') ? '' : ($usoIA === 'N' ? 'N' : 'S');
+            $config = [
+                'name' => 'usoIAOption',
+                'label' => __('plugins.generic.CspSubmission.usoIA.options'),
+                'component' => 'field-options',
+                'groupId' => 'default',
+                'isRequired' => true,
+                'type' => 'radio',
+                'options' => [
+                    ['value' => 'S', 'label' => __('common.yes')],
+                    ['value' => 'N', 'label' => __('common.no')],
+                ],
+                'value' => $usoIAOption,
+            ];
+            $args[0]["fields"][] = $config;
+            $config = [
+                'name' => 'usoIA',
+                'label' => __('plugins.generic.CspSubmission.usoIA.description'),
+                'component' => 'field-textarea',
+                'groupId' => 'default',
+                'showWhen' => ['usoIAOption', 'S'],
+                'value' => ($usoIAOption === 'S' ? $usoIA : ''),
             ];
             $args[0]["fields"][] = $config;
 
