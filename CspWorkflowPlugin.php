@@ -788,10 +788,20 @@ class CspWorkflowPlugin extends GenericPlugin {
 
     /**
      * Quando novo participante é adicionado na etapa de avaliação,
-     * recebe restrição de fazer recomendação apenas, não podendo tomar uma decisão editorial
+     * recebe restrição de fazer recomendação apenas, não podendo tomar uma decisão editorial.
+     * Grupos com papel Gerente (Editor Chefe, Editor Assistente) mantêm a permissão de decisão,
+     * pois o OJS exige ao menos um editor com poder de decisão na etapa para que as
+     * recomendações dos demais possam ser registradas
      */
     public function stageparticipantgridhandlerInitfeatures($hookName, $args) {
         if($args[2]["stageId"] == 3){
+            $userGroupId = (int) $args[1]->getUserVar('userGroupId');
+            if ($userGroupId) {
+                $userGroup = Repo::userGroup()->get($userGroupId);
+                if ($userGroup && $userGroup->getRoleId() == Role::ROLE_ID_MANAGER) {
+                    return;
+                }
+            }
             $args[2]["recommendOnly"] = "on";
             $args[1]->_requestVars["recommendOnly"] = "on";
         }
