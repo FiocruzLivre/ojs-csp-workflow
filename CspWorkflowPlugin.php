@@ -429,7 +429,7 @@ class CspWorkflowPlugin extends GenericPlugin {
                     $noteDao = DAORegistry::getDAO('NoteDAO'); /** @var NoteDAO $noteDao */
                     $notes = $noteDao->getByAssoc(Application::ASSOC_TYPE_SUBMISSION_FILE, $args[0]->tpl_vars["row"]->value->_id)->toArray();;
                     foreach ($notes as $key => $value) {
-                        $content[] = $value->getContents('contents');
+                        $content[] = htmlspecialchars($value->getContents('contents'), ENT_QUOTES);
                     }
                     $note = $content <> null ? implode('<hr>', $content) : "";
                     $typePosition = array_search("type", array_keys($args[0]->tpl_vars["columns"]->value));
@@ -507,7 +507,7 @@ class CspWorkflowPlugin extends GenericPlugin {
         $note = $noteDao->newDataObject();
 
         $note->setUserId($user->getId());
-        $note->setContents($request->getUserVar('newNote'));
+        $note->setContents(PKPString::stripUnsafeHtml($request->getUserVar('newNote')));
         $note->setAssocType(Application::ASSOC_TYPE_SUBMISSION_FILE);
         $note->setAssocId($request->getUserVar('submissionFileId'));
         $noteDao->insertObject($note);
