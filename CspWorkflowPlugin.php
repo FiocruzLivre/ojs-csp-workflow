@@ -440,11 +440,13 @@ class CspWorkflowPlugin extends GenericPlugin {
                                                             "</span></span>";
                     $args[0]->tpl_vars["columns"]->value['user'] = new GridColumn('notes', 'user.name');
                     if(isset($templateVars["row"]->_data["submissionFile"])){
-                        $user = Repo::user()->get($templateVars["row"]->_data["submissionFile"]->_data["uploaderUserId"]);
-                        $user = $user->getGivenName($templateVars["currentLocale"]);
-                        $args[0]->tpl_vars["cells"]->value[] = "<span id='cell-".$user.
+                        // allowDisabled=true: uploader account may have been disabled since the upload
+                        $uploader = Repo::user()->get($templateVars["row"]->_data["submissionFile"]->_data["uploaderUserId"], true);
+                        $uploaderName = $uploader ? $uploader->getGivenName($templateVars["currentLocale"]) : '';
+                        $uploaderNameEscaped = htmlspecialchars($uploaderName, ENT_QUOTES);
+                        $args[0]->tpl_vars["cells"]->value[] = "<span id='cell-".$uploaderNameEscaped.
                                                                 "-user' class='gridCellContainer'>
-                                                                <span class='label'>".$user.
+                                                                <span class='label'>".$uploaderNameEscaped.
                                                                 "</span></span>";
                     }
                 }
