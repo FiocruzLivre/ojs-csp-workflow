@@ -472,7 +472,7 @@ class CspWorkflowPlugin extends GenericPlugin {
                 'component' => 'field-text',
                 'groupId' => 'default',
                 'isRequired' => true,
-                'value' => $submission->getData('submissionIdCSP')
+                'value' => $publication->getData('submissionIdCSP')
             ];
             $args[0]["fields"][] = $config;
         }
