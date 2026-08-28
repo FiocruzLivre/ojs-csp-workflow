@@ -231,27 +231,72 @@ class CspWorkflowPlugin extends GenericPlugin {
         // Inclui campo submissionIdCSP em retorno de busca
         $request = Application::get()->getRequest();
         if (isset($request->_requestVars["searchPhrase"]) && !empty($request->_requestVars["searchPhrase"])) {
-            $keywords = collect(Application::getSubmissionSearchIndex()
-                ->filterKeywords($request->_requestVars["searchPhrase"], true, true, true))
-                ->unique();
-            foreach ($keywords as $key => $value) {
-                $args[0]->bindings["where"][] = 'submissionIdCSP';
-                $args[0]->bindings["where"][] = $request->_requestVars["searchPhrase"];
+            $searchPhrase = trim($request->_requestVars["searchPhrase"]);
+            // submissionIdCSP values look like "1555/26". Core's own search tokenizes on "/",
+            // splitting this into independent "1555"/"26" fragments and OR-matching each broadly
+            // against titles, the keyword index, and author name/ORCID - ORCID values are long
+            // numbers, so a short numeric fragment matches hundreds of unrelated authors. When the
+            // whole phrase looks like a submissionIdCSP, replace core's broad OR-group entirely
+            // with an exact submissionIdCSP match instead of adding to it, since adding to an
+            // existing OR can only ever widen results, never narrow them. Other search phrases are
+            // left untouched - a bare number or a title word is already handled by core's own search.
+            $isIdPattern = (bool) preg_match('#^\d+/\d+$#', $searchPhrase);
+            // Core's own search-phrase block isn't reliably the last where clause - other filters
+            // (e.g. reviewer/assignment scoping on views like "awaiting-reviews") can be appended
+            // after it. Identify it by a marker unique to its own SQL (the keyword-index table),
+            // not by position.
+            $searchBlockKey = null;
+            if ($isIdPattern) {
+                foreach ($args[0]->wheres as $idx => $w) {
+                    if (($w['type'] ?? null) === 'Nested' && isset($w['query'])
+                        && str_contains($w['query']->toSql(), 'submission_search_object_keywords')) {
+                        $searchBlockKey = $idx;
+                        break;
+                    }
+                }
             }
-            $likePattern = DB::raw("CONCAT('%', LOWER(?), '%')");
-            $lastKey = array_key_last($args[0]->wheres);
-            $args[0]->wheres[$lastKey]["query"]->orWhere(fn (Builder $q) => $keywords
-                ->map(
-                    fn (string $keyword) => $q
-                        ->orWhereIn(
-                            's.submission_id',
-                            fn (Builder $query) => $query
-                                ->select('ps.publication_id')
-                                ->from('publication_settings AS ps')
-                                ->where('ps.setting_name', '=', 'submissionIdCSP')
-                                ->where(DB::raw('LOWER(ps.setting_value)'), 'LIKE', $likePattern)->addBinding($keyword)
-                        )
-                ));
+            if ($searchBlockKey !== null) {
+                $likePattern = DB::raw("CONCAT('%', LOWER(?), '%')");
+                // Other filters before/after the search block (e.g. a raw reviewer-assignment
+                // subquery on "awaiting-reviews") may hold their own 'where' bindings with no way
+                // to recompute them generically - a raw where clause doesn't store its bound values
+                // anywhere but this flat array. Rather than guess at their shape, find the *exact*
+                // contiguous run of values this specific search block contributed (captured before
+                // touching anything) and splice only that run out, leaving every other filter's
+                // bindings untouched wherever they sit.
+                $oldSearchBindings = $args[0]->wheres[$searchBlockKey]['query']->getRawBindings()['where'] ?? [];
+                $startPos = null;
+                if ($oldSearchBindings) {
+                    $needleLen = count($oldSearchBindings);
+                    $haystack = $args[0]->bindings['where'];
+                    for ($i = 0, $max = count($haystack) - $needleLen; $i <= $max; $i++) {
+                        if (array_slice($haystack, $i, $needleLen) === $oldSearchBindings) {
+                            $startPos = $i;
+                            break;
+                        }
+                    }
+                }
+                unset($args[0]->wheres[$searchBlockKey]);
+                $args[0]->wheres = array_values($args[0]->wheres);
+                $args[0]->where(fn (Builder $q) => $q
+                    ->whereIn(
+                        's.submission_id',
+                        fn (Builder $query) => $query
+                            ->select('p.submission_id')
+                            ->from('publications AS p')
+                            ->join('publication_settings AS ps', 'p.publication_id', '=', 'ps.publication_id')
+                            ->where('ps.setting_name', '=', 'submissionIdCSP')
+                            ->where(DB::raw('LOWER(ps.setting_value)'), 'LIKE', $likePattern)->addBinding($searchPhrase)
+                    ));
+                // The line above appended our new clause's bindings to the current end of the
+                // array (Laravel's own addNestedWhereQuery does this correctly). The old search
+                // block's bindings are still sitting untouched at $startPos - removing exactly that
+                // range now leaves [before] [after] [ours], matching the new wheres order (the
+                // removed entry's slot is gone, ours is appended at the end).
+                if ($startPos !== null) {
+                    array_splice($args[0]->bindings['where'], $startPos, count($oldSearchBindings));
+                }
+            }
         }
         // Ordena a lista de submissões do dashboard em ordem decrescente de data de modificação
         $requestPath = ltrim((string) $request->getRequestPath(), '/');
