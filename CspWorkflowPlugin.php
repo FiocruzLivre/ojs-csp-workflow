@@ -29,8 +29,6 @@ use PKP\components\forms\FieldRadioInput;
 use APP\decision\Decision;
 use PKP\core\PKPString;
 use PKP\submission\reviewAssignment\ReviewAssignment;
-use PKP\submission\reviewRound\ReviewRound;
-use DateTime;
 use PKP\reviewForm\ReviewFormResponseDAO;
 
 class CspWorkflowPlugin extends GenericPlugin {
@@ -139,43 +137,6 @@ class CspWorkflowPlugin extends GenericPlugin {
     }
 
     public function templateManagerDisplay($hookName, $args){
-        if($args[1] == "dashboard/index.tpl" or $args[1] == "authorDashboard/authorDashboard.tpl"){
-            $request = Application::get()->getRequest();
-            $currentUser = $request->getUser();
-
-            // Adiciona filtros para usuários com papéis papéis: Gerente, Editor de seção, Assistente a Admin
-            if($currentUser->hasRole([Role::ROLE_ID_MANAGER, Role::ROLE_ID_ASSISTANT, Role::ROLE_ID_SITE_ADMIN, Role::ROLE_ID_SUB_EDITOR], $request->getContext()->getId())){
-
-                // Adiciona filtro "Pré-avaliação" para filtrar submissões que ainda não foram designadas para editoras chefe
-                $components = $args[0]->getState('components');
-                $components["active"]["filters"][0]["filters"][2] = array('param' => 'preAvaliacao', 'value' => true, 'title' => __('plugins.generic.cspWorkflow.pre-review'));
-                $components["myQueue"]["filters"][0]["filters"][2] = array('param' => 'preAvaliacao', 'value' => true, 'title' => __('plugins.generic.cspWorkflow.pre-review'));
-
-                //Adiciona filtro "Aguardando nova versão" para filtrar submissões que estão aguardando o envio de nova versão do autor
-                $components["active"]["filters"][1]["filters"][2] = array('param' => 'aguardandoNovaVersao', 'value' => true, 'title' => __('plugins.generic.cspWorkflow.roundStatus.resubmitForReview'),);
-                $components["myQueue"]["filters"][1]["filters"][2] = array('param' => 'aguardandoNovaVersao', 'value' => true, 'title' => __('plugins.generic.cspWorkflow.roundStatus.resubmitForReview'),);
-
-                //Adiciona filtro "Fascículo Temático" para filtrar submissões que têm esse campo preenchido
-                $components["active"]["filters"][1]["filters"][3] = array('param' => 'fasciculoTematico', 'value' => true, 'title' => __('plugins.generic.cspWorkflow.thematic'));
-                $components["myQueue"]["filters"][1]["filters"][3] = array('param' => 'fasciculoTematico', 'value' => true, 'title' => __('plugins.generic.cspWorkflow.thematic'));
-
-                //Adiciona filtro "Sem resposta avaliador" para filtrar submissões que os avaliadores que não fizeram avaliação e estão em atraso
-                $components["active"]["filters"][1]["filters"][4] = array('param' => 'semAvaliadores', 'value' => true, 'title' => __('plugins.generic.cspWorkflow.roundStatus.reviewOverdue'));
-                $components["myQueue"]["filters"][1]["filters"][4] = array('param' => 'semAvaliadores', 'value' => true, 'title' => __('plugins.generic.cspWorkflow.roundStatus.reviewOverdue'));
-
-                $components["active"]["filters"][1]["filters"][5] = array('param' => 'stageIds', 'value' => 4, 'title' => __('submission.copyediting'));
-                $components["active"]["filters"][1]["filters"][6] = array('param' => 'stageIds', 'value' => 5, 'title' => __('manager.publication.productionStage'));
-
-                $args[0]->setState(["components" => $components]);
-            }else{
-                /* Adiciona CSS específico para remover visualização status do fluxo  para usuários que não tenham nenhum
-                dos seguintes papéis: Gerente, Editor de seção, Assistente a Admin */
-                $url = $request->getBaseUrl() . '/' . $this->getPluginPath() . '/styles/hideStatus.css';
-                $templateMgr = TemplateManager::getManager($request);
-                $templateMgr->addStyleSheet('Author', $url, ['contexts' => 'backend']);
-            }
-        }
-
         // Exibe somente avaliações lidas e encaminhadas em template de email com variável allReviewerComments
         // Remove recomendação de avaliadores em email de solicitação de modificações ao autor e rejeitar submissão
         if($args[1] == "decision/record.tpl"){
@@ -187,8 +148,11 @@ class CspWorkflowPlugin extends GenericPlugin {
                 $variables = $step->variables[$locale];
                 foreach ($variables as $variableKey => $variable) {
                     if ($variable["key"] == "allReviewerComments") {
-                        $reviewAssignmentDao = DAORegistry::getDAO('ReviewAssignmentDAO');
-                        $reviewAssignments = $reviewAssignmentDao->getBySubmissionId($templateVars["submission"]->getData('id'), $request->getUserVar('reviewRoundId'), $templateVars["submission"]->getData('stageId'));
+                        $reviewAssignments = Repo::reviewAssignment()->getCollector()
+                            ->filterBySubmissionIds([$templateVars["submission"]->getData('id')])
+                            ->filterByReviewRoundIds([$request->getUserVar('reviewRoundId')])
+                            ->filterByStageId($templateVars["submission"]->getData('stageId'))
+                            ->getMany();
                         $submissionCommentDao = DAORegistry::getDAO('SubmissionCommentDAO');
                         $reviewerNumber = 0;
                         $comments = [];
@@ -262,13 +226,6 @@ class CspWorkflowPlugin extends GenericPlugin {
             }
             $args[0]->setState(["steps" => $steps]);
         }
-        if($args[1] == "workflow/workflow.tpl"){
-            $currentPublication = $args[0]->getState('currentPublication');
-            $section = Repo::section()->get($currentPublication["sectionId"]);
-            $sectioTitle = $section->getLocalizedData('title');
-            $currentPublication["sectioTitle"] = $sectioTitle;
-            $args[0]->setState(["currentPublication" => $currentPublication]);
-        }
     }
     public function submissionCollector($hookName, $args){
         // Inclui campo submissionIdCSP em retorno de busca
@@ -295,66 +252,6 @@ class CspWorkflowPlugin extends GenericPlugin {
                                 ->where(DB::raw('LOWER(ps.setting_value)'), 'LIKE', $likePattern)->addBinding($keyword)
                         )
                 ));
-        }
-        if (isset($request->_requestVars["preAvaliacao"][0])) {
-            // Retorna submissões de filtro "Pré-avaliação"
-            $args[0]->whereNotIn('s.submission_progress',['start','review','details','files','editors','contributors']);
-            $args[0]->where('s.stage_id',1);
-            $args[0]->whereNotIn('s.submission_id', fn (Builder $query) => $query
-                ->select('sa.submission_id')
-                ->from('stage_assignments AS sa')
-                ->whereIn('sa.user_group_id', [3])
-                ->distinct());
-        }
-        // Retorna submissões de filtro "Aguardando nova versão"
-        if (isset($request->_requestVars["aguardandoNovaVersao"][0])) {
-            $args[0]->leftJoin('review_assignments as raod', 'raod.submission_id', '=', 's.submission_id')
-            ->leftJoin('review_rounds as rr', fn (Builder $table) =>
-                $table->on('rr.submission_id', '=', 's.submission_id')
-                    ->on('raod.review_round_id', '=', 'rr.review_round_id')
-            );
-            // Only get overdue assignments on active review rounds
-            $args[0]->whereIn('rr.status', [
-                ReviewRound::REVIEW_ROUND_STATUS_RESUBMIT_FOR_REVIEW,
-            ]);
-            $args[0]->distinct();
-        }
-        if (isset($request->_requestVars["fasciculoTematico"][0])) {
-            // Retorna submissões de filtro "Fascículo Temático"
-            $args[0]->whereIn('po.publication_id', fn (Builder $query) => $query
-                ->select('ps.publication_id')
-                ->from('publication_settings AS ps')
-                ->where('ps.setting_name', 'codigoFasciculoTematico')
-                ->distinct());
-        }
-        // Retorna submissões de filtro "Sem resposta avaliadores"
-        if (isset($request->_requestVars["semAvaliadores"][0])) {
-            $currentTime = new DateTime();
-            $args[0]->leftJoin('review_assignments as raod', 'raod.submission_id', '=', 's.submission_id')
-                ->leftJoin(
-                    'review_rounds as rr',
-                    fn(Builder $table) =>
-                    $table->on('rr.submission_id', '=', 's.submission_id')
-                        ->on('raod.review_round_id', '=', 'rr.review_round_id')
-                )
-                ->where('rr.status', '=', ReviewRound::REVIEW_ROUND_STATUS_REVIEWS_OVERDUE)
-                ->whereNotIn(
-                    's.submission_id',
-                    fn(Builder $query) =>
-                    $query->select('ra.submission_id')
-                        ->from('review_assignments AS ra')
-                        ->where('ra.date_due', '>', $currentTime->format('Y-m-d H:i:s'))
-                        ->distinct()
-                )
-                ->whereNotIn(
-                    's.submission_id',
-                    fn(Builder $query) =>
-                    $query->select('ra2.submission_id')
-                        ->from('review_assignments AS ra2')
-                        ->where('ra2.date_completed', '<>', null)
-                        ->distinct()
-                )
-                ->distinct();
         }
         // Ordena a lista de submissões do dashboard em ordem decrescente de data de modificação
         $requestPath = ltrim((string) $request->getRequestPath(), '/');
@@ -384,11 +281,7 @@ class CspWorkflowPlugin extends GenericPlugin {
             $currentUser = $request->getUser();
             if(!$currentUser->hasRole([Role::ROLE_ID_MANAGER, Role::ROLE_ID_ASSISTANT, Role::ROLE_ID_SITE_ADMIN, Role::ROLE_ID_SUB_EDITOR], $request->getContext()->getId())){
                 foreach ($templateVars["allParticipants"] as $participant => $value) {
-                    $userGroups = Repo::userGroup()
-                    ->getCollector()
-                    ->filterByUserIds([$participant])
-                    ->getMany()
-                    ->toArray();
+                    $userGroups = \PKP\userGroup\UserGroup::query()->withUserIds([$participant])->get();
                     $userGroupsAbbrev = array();
                     foreach($userGroups as $userGroup){
                         $userGroupsAbbrev[] = $userGroup->getLocalizedData('abbrev');
@@ -410,7 +303,7 @@ class CspWorkflowPlugin extends GenericPlugin {
             }
         }
         if($args[1] == "controllers/grid/gridRow.tpl"){
-            $user = Repo::user()->get($_SESSION["userId"], true);
+            $user = $request->getUser();
             $submissionId = $request->getUserVar('submissionId');
             if ($submissionId) {
                 $submission = Repo::submission()->get((int) $submissionId);
@@ -426,10 +319,9 @@ class CspWorkflowPlugin extends GenericPlugin {
                  */
                 if(substr($templateVars["grid"]->_id,0,10) == "grid-files" && is_array($templateVars["row"]->_data)){
                     $args[0]->tpl_vars["columns"]->value['notes'] = new GridColumn('notes', 'common.note');
-                    $noteDao = DAORegistry::getDAO('NoteDAO'); /** @var NoteDAO $noteDao */
-                    $notes = $noteDao->getByAssoc(Application::ASSOC_TYPE_SUBMISSION_FILE, $args[0]->tpl_vars["row"]->value->_id)->toArray();;
+                    $notes = \PKP\note\Note::withAssoc(Application::ASSOC_TYPE_SUBMISSION_FILE, $args[0]->tpl_vars["row"]->value->_id)->get();
                     foreach ($notes as $key => $value) {
-                        $content[] = htmlspecialchars($value->getContents('contents'), ENT_QUOTES);
+                        $content[] = htmlspecialchars($value->getData('contents'), ENT_QUOTES);
                     }
                     $note = $content <> null ? implode('<hr>', $content) : "";
                     $typePosition = array_search("type", array_keys($args[0]->tpl_vars["columns"]->value));
@@ -503,14 +395,12 @@ class CspWorkflowPlugin extends GenericPlugin {
         $request = Application::get()->getRequest();
         $user = $request->getUser();
 
-        $noteDao = DAORegistry::getDAO('NoteDAO'); /** @var NoteDAO $noteDao */
-        $note = $noteDao->newDataObject();
-
-        $note->setUserId($user->getId());
-        $note->setContents(PKPString::stripUnsafeHtml($request->getUserVar('newNote')));
-        $note->setAssocType(Application::ASSOC_TYPE_SUBMISSION_FILE);
-        $note->setAssocId($request->getUserVar('submissionFileId'));
-        $noteDao->insertObject($note);
+        \PKP\note\Note::create([
+            'userId' => $user->getId(),
+            'contents' => PKPString::stripUnsafeHtml($request->getUserVar('newNote')),
+            'assocType' => Application::ASSOC_TYPE_SUBMISSION_FILE,
+            'assocId' => $request->getUserVar('submissionFileId'),
+        ]);
     }
     // Exibe campos criados em aba "Publicação"
     public function FormConfigAfter($hookName, $args) {
@@ -800,7 +690,7 @@ class CspWorkflowPlugin extends GenericPlugin {
             $userGroupId = (int) $args[1]->getUserVar('userGroupId');
             if ($userGroupId) {
                 $userGroup = Repo::userGroup()->get($userGroupId);
-                if ($userGroup && $userGroup->getRoleId() == Role::ROLE_ID_MANAGER) {
+                if ($userGroup && $userGroup->roleId == Role::ROLE_ID_MANAGER) {
                     return;
                 }
             }
