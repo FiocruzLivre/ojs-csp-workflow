@@ -300,8 +300,9 @@ class CspWorkflowPlugin extends GenericPlugin {
         }
         // Ordena a lista de submissões do dashboard em ordem decrescente de data de modificação
         $requestPath = ltrim((string) $request->getRequestPath(), '/');
-        if (in_array($requestPath, ["ojs/index.php/csp/api/v1/_submissions","ojs/index.php/csp/submissions"])) {
+        if (str_contains($requestPath, 'api/v1/_submissions') || str_ends_with($requestPath, '/submissions')) {
             $args[0]->orders[0]["column"] = 's.date_last_activity';
+            $args[0]->orders[0]["direction"] = 'DESC';
             $args[1]->orderBy = 'dateLastActivity';
         }
     }
