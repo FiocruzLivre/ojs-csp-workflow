@@ -18,7 +18,6 @@ use APP\facades\Repo;
 use APP\template\TemplateManager;
 use PKP\db\DAORegistry;
 use APP\core\Application;
-use PKP\controllers\grid\GridColumn;
 use PKP\security\Role;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
@@ -345,48 +344,6 @@ class CspWorkflowPlugin extends GenericPlugin {
             foreach ($templateVars["reviewerRecommendationOptions"] as $key => $value) {
                 if(!in_array($value,["common.chooseOne", "reviewer.article.decision.accept", "reviewer.article.decision.pendingRevisions", "reviewer.article.decision.decline" ])){
                     unset($args[0]->tpl_vars["reviewerRecommendationOptions"]->value[$key]);
-                }
-            }
-        }
-        if($args[1] == "controllers/grid/gridRow.tpl"){
-            $user = $request->getUser();
-            $submissionId = $request->getUserVar('submissionId');
-            if ($submissionId) {
-                $submission = Repo::submission()->get((int) $submissionId);
-                $publication = Repo::publication()->get((int) $submission->getData('currentPublicationId'));
-                foreach ($publication->_data["authors"] as $key => $value) {
-                    if ($value->getData('email') == $user->getData('email')) {
-                        return;
-                    }
-                }
-                /**
-                 * Em lista (grid) de arquivos,
-                 * substitui tipo do arquivo por comentário sobre o arquivo e adiciona nome de pessoa que incluiu o arquivo
-                 */
-                if(substr($templateVars["grid"]->_id,0,10) == "grid-files" && is_array($templateVars["row"]->_data)){
-                    $args[0]->tpl_vars["columns"]->value['notes'] = new GridColumn('notes', 'common.note');
-                    $notes = \PKP\note\Note::withAssoc(Application::ASSOC_TYPE_SUBMISSION_FILE, $args[0]->tpl_vars["row"]->value->_id)->get();
-                    foreach ($notes as $key => $value) {
-                        $content[] = htmlspecialchars($value->getData('contents'), ENT_QUOTES);
-                    }
-                    $note = $content <> null ? implode('<hr>', $content) : "";
-                    $typePosition = array_search("type", array_keys($args[0]->tpl_vars["columns"]->value));
-                    $args[0]->tpl_vars["cells"]->value[$typePosition] = "<span id='cell-".
-                                                            $templateVars["row"]->_id.
-                                                            "-note' class='gridCellContainer'>
-                                                            <span class='label'>".$note.
-                                                            "</span></span>";
-                    $args[0]->tpl_vars["columns"]->value['user'] = new GridColumn('notes', 'user.name');
-                    if(isset($templateVars["row"]->_data["submissionFile"])){
-                        // allowDisabled=true: uploader account may have been disabled since the upload
-                        $uploader = Repo::user()->get($templateVars["row"]->_data["submissionFile"]->_data["uploaderUserId"], true);
-                        $uploaderName = $uploader ? $uploader->getGivenName($templateVars["currentLocale"]) : '';
-                        $uploaderNameEscaped = htmlspecialchars($uploaderName, ENT_QUOTES);
-                        $args[0]->tpl_vars["cells"]->value[] = "<span id='cell-".$uploaderNameEscaped.
-                                                                "-user' class='gridCellContainer'>
-                                                                <span class='label'>".$uploaderNameEscaped.
-                                                                "</span></span>";
-                    }
                 }
             }
         }
