@@ -1,8 +1,3 @@
-/* Esconde as opções de permitir recomendação e alteração de metadados ao designar participante */
-#addParticipant .recommendOnlyWrapper, #addParticipant .submissionEditMetadataPermit{
-	display: none !important;
-}
-
 /* Remove títulos de listas de submissões */
 .submissionsListPanel .pkpHeader__title{
 	display: none !important;

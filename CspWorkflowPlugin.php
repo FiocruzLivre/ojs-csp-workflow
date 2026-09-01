@@ -52,7 +52,6 @@ class CspWorkflowPlugin extends GenericPlugin {
             Hook::add('submissionfilesuploadform::execute', [$this, 'submissionfilesuploadformExecute']);
             Hook::add('submissionfilesmetadataform::execute', [$this, 'submissionfilesmetadataformExecute']);
             Hook::add('Form::config::after', [$this, 'FormConfigAfter']);
-            Hook::add('stageparticipantgridhandler::initfeatures', [$this, 'stageparticipantgridhandlerInitfeatures']);
             Hook::add('submissionfilesuploadform::display', [$this, 'submissionfilesuploadformDisplay']);
             Hook::add('ReviewerAction::confirmReview', [$this, 'reviewerActionConfirmReview']);
             Hook::add('Submission::Collector', [$this, 'submissionCollector']);
@@ -136,6 +135,17 @@ class CspWorkflowPlugin extends GenericPlugin {
     }
 
     public function templateManagerDisplay($hookName, $args){
+        $templateMgr = $args[0];
+        $request = Application::get()->getRequest();
+
+        $templateMgr->addJavaScript(
+            'CspWorkflow',
+            $request->getBaseUrl() . '/' . $this->getPluginPath() . '/js/backend.js',
+            [
+                'priority' => TemplateManager::STYLE_SEQUENCE_LATE,
+                'contexts' => ['backend']
+            ]
+        );
         // Exibe somente avaliações lidas e encaminhadas em template de email com variável allReviewerComments
         // Remove recomendação de avaliadores em email de solicitação de modificações ao autor e rejeitar submissão
         if($args[1] == "decision/record.tpl"){
@@ -657,27 +667,6 @@ class CspWorkflowPlugin extends GenericPlugin {
                     'value' => $plain
                 ];
             }
-        }
-    }
-
-    /**
-     * Quando novo participante é adicionado na etapa de avaliação,
-     * recebe restrição de fazer recomendação apenas, não podendo tomar uma decisão editorial.
-     * Grupos com papel Gerente (Editor Chefe, Editor Assistente) mantêm a permissão de decisão,
-     * pois o OJS exige ao menos um editor com poder de decisão na etapa para que as
-     * recomendações dos demais possam ser registradas
-     */
-    public function stageparticipantgridhandlerInitfeatures($hookName, $args) {
-        if($args[2]["stageId"] == 3){
-            $userGroupId = (int) $args[1]->getUserVar('userGroupId');
-            if ($userGroupId) {
-                $userGroup = Repo::userGroup()->get($userGroupId);
-                if ($userGroup && $userGroup->roleId == Role::ROLE_ID_MANAGER) {
-                    return;
-                }
-            }
-            $args[2]["recommendOnly"] = "on";
-            $args[1]->_requestVars["recommendOnly"] = "on";
         }
     }
 
