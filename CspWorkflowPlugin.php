@@ -22,13 +22,10 @@ use PKP\security\Role;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use PKP\facades\Locale;
-use PKP\components\forms\FieldTextarea;
 use PKP\components\forms\FieldText;
-use PKP\components\forms\FieldRadioInput;
 use APP\decision\Decision;
 use PKP\core\PKPString;
 use PKP\submission\reviewAssignment\ReviewAssignment;
-use PKP\reviewForm\ReviewFormResponseDAO;
 
 class CspWorkflowPlugin extends GenericPlugin {
 
@@ -52,7 +49,6 @@ class CspWorkflowPlugin extends GenericPlugin {
             Hook::add('submissionfilesuploadform::execute', [$this, 'submissionfilesuploadformExecute']);
             Hook::add('submissionfilesmetadataform::execute', [$this, 'submissionfilesmetadataformExecute']);
             Hook::add('Form::config::after', [$this, 'FormConfigAfter']);
-            Hook::add('submissionfilesuploadform::display', [$this, 'submissionfilesuploadformDisplay']);
             Hook::add('ReviewerAction::confirmReview', [$this, 'reviewerActionConfirmReview']);
             Hook::add('Submission::Collector', [$this, 'submissionCollector']);
             Hook::add('TemplateManager::display', [$this, 'templateManagerDisplay']);
@@ -670,18 +666,7 @@ class CspWorkflowPlugin extends GenericPlugin {
         }
     }
 
-    /**
-     * Adiciona texto para auxiliar entendimento de usuário
-     */
-    public function submissionfilesuploadformDisplay($hookName, $args) {
-        foreach ($args[0]->getData('submissionFileOptions') as $key => $value) {
-            if($key){
-                $args[0]->_data["submissionFileOptions"][$key] = 'Nova versão para ' . $value;
-            }
-        }
-    }
-
-    // Remove envio de email ao avaliador aceitar realizar avaliação
+    // Remove envio de email para todos os editores quando avaliador aceita realizar avaliação
     public function reviewerActionConfirmReview($hookName, $args) {
         unset($args[2]->to);
     }
