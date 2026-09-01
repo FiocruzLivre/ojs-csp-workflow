@@ -370,6 +370,7 @@ class CspWorkflowPlugin extends GenericPlugin {
         }
     }
 
+    // Grava conteúdo do campo "Notas" inserido em template de upload de arquivos templates/controllers/wizard/fileUpload/form/submissionFileMetadataForm.tpl
     public function submissionfilesmetadataformExecute($hookName, $args) {
         $request = Application::get()->getRequest();
         $user = $request->getUser();
