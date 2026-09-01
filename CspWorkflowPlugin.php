@@ -382,12 +382,12 @@ class CspWorkflowPlugin extends GenericPlugin {
             'assocId' => $request->getUserVar('submissionFileId'),
         ]);
     }
-    // Exibe campos criados em aba "Publicação"
+
     public function FormConfigAfter($hookName, $args) {
         $request = Application::get()->getRequest();
         $context = $request->getContext();
-        $router = $request->getRouter();
-        if($args[0]["id"] == "titleAbstract"){
+        // Adiciona campos "Recebido" (dateSubmitted), "Aceito" (dateAccepted) e "ID do Sagas" (submissionIdCSP) na área "Publicação > Edição"
+        if($args[0]["id"] == "issueEntry"){
             $publicationId = explode('/',$args[0]["action"]);
             $publicationId = end($publicationId);
             $publication = Repo::publication()->get((int)$publicationId);
@@ -398,14 +398,16 @@ class CspWorkflowPlugin extends GenericPlugin {
                 'isRequired' => true,
                 'size' => 'medium'
             ]));
-        }
-        if($args[0]["id"] == "issueEntry"){
-            $publicationId = explode('/',$args[0]["action"]);
-            $publicationId = end($publicationId);
-            $publication = Repo::publication()->get((int)$publicationId);
-            $submission = Repo::submission()->get((int)$publication->_data["submissionId"]);
+            $config = [
+                'name' => 'submissionIdCSP',
+                'label' => __('plugins.generic.cspWorkflow.submissionIdCSP'),
+                'component' => 'field-text',
+                'groupId' => 'default',
+                'isRequired' => true,
+                'value' => $publication->getData('submissionIdCSP')
+            ];
+            $args[0]["fields"][] = $config;
 
-            $dateFormatShort = PKPString::convertStrftimeFormat($context->getLocalizedDateFormatShort());
             $args[1]->addField(new \PKP\components\forms\FieldHTML('dateSubmitted', [
                 'label' => __('plugins.themes.csp.dates.received'),
                 'groupId' => 'default',
@@ -445,26 +447,27 @@ class CspWorkflowPlugin extends GenericPlugin {
                 'value' => date('Y-m-d', $decisionsAccepted ? strtotime($decisionsAccepted->getData('dateDecided')) : null),
             ];
             $args[0]["fields"][] = $config;
-
-            $config = [
-                'name' => 'submissionIdCSP',
-                'label' => __('plugins.generic.cspWorkflow.submissionIdCSP'),
-                'component' => 'field-text',
-                'groupId' => 'default',
-                'isRequired' => true,
-                'value' => $publication->getData('submissionIdCSP')
-            ];
-            $args[0]["fields"][] = $config;
         }
 
+        // Em decisão "Solicitar modificações", deixa selecionada a opção "Solicitar modificações ao autor que estarão sujeitos a avaliação futura."
         if($args[0]["id"] == "selectRevisionDecision"){
             $revisionDecisionForm = $args[1];
             $config =& $args[0];
             $fieldDecision = $revisionDecisionForm->getField('decision');
             $config["fields"][0]["value"] = $fieldDecision->options[1]["value"];
         }
-        if($args[1]->id == "metadata"){
 
+        if($args[1]->id == "metadata"){
+            // Na área "Publicação > Metadados", exibe campos adicionados na submissão via plugin cspSubmission:
+            // Declaração de Disponibilidade de Dados (dataAvailabilityRadios)
+            // Seu texto está disponibilizado em repositório de Monografia/Dissertação/Tese? (monografDissertTese)
+            // Agradecimentos  (agradecimentos)
+            // Tema (espacoTematico)
+            // Código (codigoArtigoRelacionado) 
+            // Código do fascículo temático (codigoFasciculoTematico)
+            // Seu artigo possui potencial conflito de interesse? (conflitoInteresse)
+            // Considerações éticas e legais (consideracoesEticas)
+            // Uso de IA na elaboração do manuscrito (usoIA)
             $publicationId = explode('/',$args[0]["action"]);
             $publicationId = end($publicationId);
             $publication = Repo::publication()->get((int)$publicationId);
@@ -614,8 +617,7 @@ class CspWorkflowPlugin extends GenericPlugin {
             ];
             $args[0]["fields"][] = $config;
 
-            // Exibe avaliadores que responderam "Sim" a seguint pergunta do formulário de avaliação:
-            // "Caso este manuscrito seja aprovado em CSP, você aceitaria que seu nome fosse divulgado na publicação?"
+            // Exibe avaliadores aceitaram ter nome divulgado em resposta a formulário de avaliação
             $reviewerNames = [];
             $reviewerIds = DB::table('review_form_responses as r')
                 ->join('review_assignments as ra', 'r.review_id', '=', 'ra.review_id')
