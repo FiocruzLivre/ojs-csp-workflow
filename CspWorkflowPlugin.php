@@ -347,30 +347,6 @@ class CspWorkflowPlugin extends GenericPlugin {
                 }
             }
         }
-        // Altera a largura das colunas (grid) em diferentes estágios
-        if($args[1] == "controllers/grid/grid.tpl"){
-            if(in_array($templateVars["grid"]->_id,
-                        ["grid-files-submission-editorsubmissiondetailsfilesgrid", 
-                        "grid-files-review-editorreviewfilesgrid",
-                        "grid-files-review-workflowreviewrevisionsgrid",
-                        "grid-files-final-finaldraftfilesgrid", 
-                        "grid-files-copyedit-copyeditfilesgrid",
-                        "grid-files-productionready-productionreadyfilesgrid"])){
-                $args[0]->tpl_vars["columns"]->value["name"]->_flags["width"] = 60;
-                $args[0]->tpl_vars["columns"]->value["date"]->_flags["width"] = 20;
-            }
-            if($templateVars["grid"]->_id == "grid-files-final-managefinaldraftfilesgrid"){
-                $args[0]->tpl_vars["columns"]->value["select"]->_flags["width"] = 13;
-                $args[0]->tpl_vars["columns"]->value["name"]->_flags["width"] = 60;
-                $args[0]->tpl_vars["columns"]->value["type"]->_flags["width"] = 25;
-            }
-            if($templateVars["grid"]->_id == "grid-users-reviewer-reviewergrid"){
-                $args[0]->tpl_vars["columns"]->value["name"]->_flags["width"] = 20;
-                $args[0]->tpl_vars["columns"]->value["considered"]->_flags["width"] = 20;
-                $args[0]->tpl_vars["columns"]->value["method"]->_flags["width"] = 20;
-                $args[0]->tpl_vars["columns"]->value["actions"]->_flags["width"] = 40;
-            }
-        }
     }
 
     public function submissionfilesuploadformExecute($hookName, $args) {
