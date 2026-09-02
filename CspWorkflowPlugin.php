@@ -25,6 +25,7 @@ use PKP\facades\Locale;
 use PKP\components\forms\FieldText;
 use APP\decision\Decision;
 use PKP\core\PKPString;
+use PKP\core\PKPApplication;
 use PKP\submission\reviewAssignment\ReviewAssignment;
 
 class CspWorkflowPlugin extends GenericPlugin {
@@ -133,6 +134,24 @@ class CspWorkflowPlugin extends GenericPlugin {
     public function templateManagerDisplay($hookName, $args){
         $templateMgr = $args[0];
         $request = Application::get()->getRequest();
+        $context = $request->getContext();
+        if ($context) {
+            $dispatcher = $request->getDispatcher();
+            $templateMgr->addJavaScript(
+                'CspWorkflowSubmissionsApiUrl',
+                'window.cspWorkflowSubmissionsApiUrl = ' . json_encode(
+                    $dispatcher->url($request, PKPApplication::ROUTE_API, $context->getPath(), 'submissions') . '/'
+                ) . ';'
+                . 'window.cspWorkflowSectionsApiUrl = ' . json_encode(
+                    $dispatcher->url($request, PKPApplication::ROUTE_API, $context->getPath(), 'sections')
+                ) . ';',
+                [
+                    'priority' => TemplateManager::STYLE_SEQUENCE_LATE,
+                    'contexts' => ['backend'],
+                    'inline' => true,
+                ]
+            );
+        }
 
         $templateMgr->addJavaScript(
             'CspWorkflow',
