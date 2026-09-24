@@ -61,6 +61,10 @@ class CspWorkflowPlugin extends GenericPlugin {
             Hook::add('Submission::Collector', [$this, 'submissionCollector']);
             Hook::add('TemplateManager::display', [$this, 'templateManagerDisplay']);
             Hook::add('Publication::edit', [$this, 'publicationEdit']);
+
+            // No Hook::add() can catch this: Publication::validate fires before the
+            // abstract word-count check even runs, so we rebind the repository instead.
+            app()->bind(\APP\publication\Repository::class, \APP\plugins\generic\cspWorkflow\classes\publication\CspPublicationRepository::class);
         }
 
         return $success;
